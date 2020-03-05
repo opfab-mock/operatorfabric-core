@@ -15,7 +15,7 @@ apply plugin: plugin.dockerBuild
 
 docker {
 
-	name "lfeoperatorfabric/of-${project.name.toLowerCase()}"
+	name "lfeoperatorfabricmock/of-${project.name.toLowerCase()}"
 	tags "latest", "${project.version}"
 	labels(['project': "${project.group}"])
 	copySpec.with {
