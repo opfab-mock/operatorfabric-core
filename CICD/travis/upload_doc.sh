@@ -3,7 +3,7 @@
 . ${BASH_SOURCE%/*}/../../bin/load_variables.sh
 
 CURRENT_PATH=$(pwd)
-GH_REPO=github.com/opfab-mock/opfab.github.io.git
+GH_REPO=github.com/opfab-mock/opfab-mock.github.io.git
 HTTP_REPO="https://opfabtechmock:${GH_DOC_TOKEN}@${GH_REPO}"
 git clone --depth 1 $HTTP_REPO $HOME/documentation
 
