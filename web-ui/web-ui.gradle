@@ -26,7 +26,7 @@ if (isSnapshot) {
 
 docker {
 
-	name "lfeoperatorfabric/of-${project.name.toLowerCase()}"
+	name "lfeoperatorfabricmock/of-${project.name.toLowerCase()}"
 	tags 'latest', dockerVersionTag
 	labels(['project': "${project.group}"])
 	copySpec.from("../ui/main/build/distribution").into("distribution")
