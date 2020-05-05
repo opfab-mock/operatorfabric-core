@@ -21,17 +21,23 @@ to the account of any member of the team.
 
 == CICD Pipeline
 
+
 === Travis CI
 
-We use Travis CI to manage our pipeline. As of today, it is composed of 3 stages:
-[horizontal]
-test-assemble:: Run on every push regardless of the branch, does the build and produces test reports.
-It also triggers a sonar-scanner analysis and pushes the results to SonarCloud (except for external pull requests).
-doc:: Run only on the master branch, for the daily cron jobs or if a commit is push with a message containing
-ci_documentation. It generates the documentation (adoc, javadoc, compodoc, reports) and pushes it to the opfab.github.io
-repository to update the website.
-docker:: Run only on the master branch, for the daily cron jobs or if a commit is push with a message containing
-ci_docker. It generates the docker images for the current version and pushes them to DockerHub.
+WORK in progress
+
+//TODO Adapt documentation to Git Flow : Replace with proper table and add explanations
+image::tmp_CICD_stages.png[]
+
+//We use Travis CI to manage our pipeline. As of today, it is composed of 3 stages:
+//[horizontal]
+//test-assemble:: Run on every push regardless of the branch, does the build and produces test reports.
+//It also triggers a sonar-scanner analysis and pushes the results to SonarCloud (except for external pull requests).
+//doc:: Run only on the master branch, for the daily cron jobs or if a commit is push with a message containing
+//ci_documentation. It generates the documentation (adoc, javadoc, compodoc, reports) and pushes it to the opfab.github.io
+//repository to update the website.
+//docker:: Run only on the master branch, for the daily cron jobs or if a commit is push with a message containing
+//ci_docker. It generates the docker images for the current version and pushes them to DockerHub.
 
 === SonarCloud
 

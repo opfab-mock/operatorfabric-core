@@ -63,6 +63,8 @@ Work in Progress
 
 == Contributing Code or Documentation
 
+include::workflow.adoc[leveloffset=+1]
+
 === Code Guidelines
 
 //TODO add style guidelines
