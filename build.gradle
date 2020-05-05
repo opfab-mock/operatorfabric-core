@@ -124,7 +124,7 @@ asciidoctor {
                 revdate             : operatorfabric.revisionDate,
                 sectnums            : '',
                 toc                 : 'left',
-                toclevels           : '3',
+                toclevels           : '4',
                 icons               : 'font',
                 "hide-uri-scheme"   : '',
                 "source-highlighter": 'coderay'
