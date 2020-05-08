@@ -110,7 +110,7 @@ stages:
 #  - name: test-sonar
 #    if:
   - name: debug-not-fork
-    if: fork = false
+    if: fork == false
   - name: debug-not-tag
     if: tag IS blank
   - name: docker-push-version
