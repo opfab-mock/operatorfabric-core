@@ -99,7 +99,7 @@ jobs:
     script:
       - ./gradlew --build-cache generateSwaggerUI asciidoctor
       - ./CICD/travis/upload_doc.sh
-  - stage: is-opfab-repo
+  - stage: is-opfab-head-repo
     script:
       - echo "is opfab repo ran"
 stages:
@@ -108,8 +108,8 @@ stages:
 #    if:
 #  - name: test-sonar
 #    if:
-  - name: is-opfab-repo
-    if: (repo = opfab-mock/operatorfabric-core)
+  - name: is-opfab-head-repo
+    if: (head_repo = opfab-mock/operatorfabric-core)
   - name: docker-push-version
     if: ((((type = cron OR commit_message =~ ci_docker) AND (branch = develop)) OR (branch = master)) AND NOT type IN (pull_request))
   - name: docker-push-latest
