@@ -109,7 +109,7 @@ stages:
 #  - name: test-sonar
 #    if:
   - name: is-opfab-head-repo
-    if: (head_repo = opfab-mock/operatorfabric-core)
+    if: (head_repo = AlexLeger/operatorfabric-core)
   - name: docker-push-version
     if: ((((type = cron OR commit_message =~ ci_docker) AND (branch = develop)) OR (branch = master)) AND NOT type IN (pull_request))
   - name: docker-push-latest
