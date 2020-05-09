@@ -99,17 +99,15 @@ jobs:
     script:
       - ./gradlew --build-cache generateSwaggerUI asciidoctor
       - ./CICD/travis/upload_doc.sh
-  - stage: is-opfab-head-repo
+  - stage: doc-dry-run
     script:
-      - echo "is opfab repo ran"
+      - ./gradlew --build-cache generateSwaggerUI asciidoctor
 stages:
   # Note: The condition on type is necessary to exclude PRs because their base branch is usually develop
-#  - name: test
-#    if:
-#  - name: test-sonar
-#    if:
-  - name: is-opfab-head-repo
-    if: (head_repo = opfab-mock/operatorfabric-core)
+  - name: test
+    if: (head_repo != opfab-mock/operatorfabric-core) #TODO Change back to real repo
+  - name: test-sonar
+    if: (head_repo = opfab-mock/operatorfabric-core) #TODO Change back to real repo
   - name: docker-push-version
     if: ((((type = cron OR commit_message =~ ci_docker) AND (branch = develop)) OR (branch = master)) AND NOT type IN (pull_request))
   - name: docker-push-latest
@@ -118,6 +116,8 @@ stages:
     if: (branch =~ .+release$) OR (branch NOT IN (master,develop) AND commit_message =~ ci_docker)
   - name: doc
     if: ((((type = cron OR commit_message =~ ci_documentation) AND (branch = develop)) OR (branch = master)) AND (NOT type IN (pull_request)))
+  - name: doc-dry-run
+    if: (branch =~ .+release$) OR (branch NOT IN (master,develop) AND commit_message =~ ci_documentation)
 before_cache:
   # cleanup gradle caches
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
