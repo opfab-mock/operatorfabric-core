@@ -102,68 +102,23 @@ jobs:
     - stage: doc-dry-run
       script:
         - ./gradlew --build-cache generateSwaggerUI asciidoctor
-    - stage: branch-release
-      script:
-        - echo branch-release
-    - stage: branch-master
-      script:
-        - echo branch-master
-    - stage: branch-develop
-      script:
-        - echo branch-develop
-    - stage: head-repo-Alex
-      script:
-        - echo head_repository
-    - stage: head-repo-mock
-      script:
-        - echo head_repository
-    - stage: head-repo-opfab
-      script:
-        - echo head_repository
-    - stage: repo-Alex
-      script:
-        - echo repo
-    - stage: repo-mock
-      script:
-        - echo repo
-    - stage: repo-opfab
-      script:
-        - echo repo
 stages:
   # Note: The condition on type is necessary to exclude PRs because their base branch is usually develop
   #TODO Change head_repo conditions back to real repo
-  - name: branch-master
-    if: branch = master
-  - name: branch-develop
-    if: branch = develop
-  - name: branch-release
-    if: branch =~ .+release$
-  - name: head-repo-Alex
-    if: head_repo = AlexGuironnetRTE/operatorfabric-core
-  - name: head-repo-mock
-    if: head_repo = opfab-mock/operatorfabric-core
-  - name: head-repo-opfab
-    if: head_repo = opfab/operatorfabric-core
-  - name: repo-Alex
-    if: repo = AlexGuironnetRTE/operatorfabric-core
-  - name: repo-mock
-    if: repo = opfab-mock/operatorfabric-core
-  - name: repo-opfab
-    if: repo = opfab/operatorfabric-core
   - name: test
-    if: head_repo != opfab-mock/operatorfabric-core
+    if: type IN (pull_request) AND head_repo != opfab-mock/operatorfabric-core
   - name: test-sonar
-    if: head_repo = opfab-mock/operatorfabric-core
+    if: NOT (type IN (pull_request) AND head_repo != opfab-mock/operatorfabric-core)
   - name: docker-push-version
-    if: (((type = cron OR commit_message =~ ci_docker) AND branch = develop) OR branch = master) AND head_repo = opfab-mock/operatorfabric-core AND NOT type IN (pull_request)
+    if: (((type = cron OR commit_message =~ ci_docker) AND branch = develop) OR branch = master) AND NOT type IN (pull_request)
   - name: docker-push-latest
-    if: branch = master AND commit_message =~ ci_latest AND head_repo = opfab-mock/operatorfabric-core AND NOT type IN (pull_request)
+    if: branch = master AND commit_message =~ ci_latest AND NOT type IN (pull_request)
   - name: docker-tag-version
-    if: (branch =~ .+release$) OR (branch NOT IN (master,develop) AND commit_message =~ ci_docker)
+    if: (branch =~ .+release$) OR (NOT (branch IN (master,develop) AND NOT type IN (pull_request)) AND commit_message =~ ci_docker)
   - name: doc
-    if: ((((type = cron OR commit_message =~ ci_documentation) AND (branch = develop)) OR (branch = master)) AND (NOT type IN (pull_request)))
+    if: ((((type = cron OR commit_message =~ ci_documentation) AND branch = develop) OR branch = master) AND NOT type IN (pull_request))
   - name: doc-dry-run
-    if: (branch =~ .+release$) OR (branch NOT IN (master,develop) AND commit_message =~ ci_documentation)
+    if: (branch =~ .+release$) OR (NOT (branch IN (master,develop) AND NOT type IN (pull_request)) AND commit_message =~ ci_documentation)
 before_cache:
   # cleanup gradle caches
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
