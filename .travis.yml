@@ -73,10 +73,7 @@ jobs:
         # See https://github.com/SonarSource/SonarJS/issues/1928 and https://community.sonarsource.com/t/error-about-unsupported-ts-version-while-project-is-using-supported-version/15776
         - rm -r ui/main/node_modules/@compodoc/ngd-core
         - rm -r ui/main/node_modules/ts-simple-ast
-        # If SONAR_TOKEN is not available (for external PRs for example), skip sonar
-        - if [ "${SONAR_TOKEN}" != "" ]; then
-          (sonar-scanner) && (echo sonar-scanner was run);
-          fi
+        - sonar-scanner
         - docker-compose -f src/main/docker/test-environment/docker-compose.yml down
     - stage: docker-push-version
       script:
