@@ -1,1 +1,1 @@
-Some content from feature 1.
+Some content from feature 1 and some content that has been changed on develop since Feature 1 branched off.
