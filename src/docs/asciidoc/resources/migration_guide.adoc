@@ -60,7 +60,11 @@ Below is a summary of the changes to the `config.json` file that all this entail
 
 |
 |name
-|I18n key for process display name. Will probably be used for Free Message and maybe filters
+|I18n key for process display name. 
+
+|
+|states.mystate.name
+|I18n key for state display name. 
 
 |i18nLabelKey
 |menuLabel
@@ -81,20 +85,6 @@ Here is an example of a simple config.json file:
   "name": "TEST",
   "version": "1",
   "defaultLocale": "fr",
-  "templates": [
-    "security",
-    "unschedulledPeriodicOp",
-    "operation",
-    "template1",
-    "template2"
-  ],
-  "csses": [
-    "tabs",
-    "accordions",
-    "filter",
-    "operations",
-    "security"
-  ],
   "menuEntries": [
     {"id": "uid test 0","url": "https://opfab.github.io/","label": "menu.first"},
     {"id": "uid test 1","url": "https://www.la-rache.com","label": "menu.second"}
@@ -127,20 +117,6 @@ Here is an example of a simple config.json file:
   "version": "1",
   "name": "process.label",
   "defaultLocale": "fr",
-  "templates": [
-    "security",
-    "unschedulledPeriodicOp",
-    "operation",
-    "template1",
-    "template2"
-  ],
-  "csses": [
-    "tabs",
-    "accordions",
-    "filter",
-    "operations",
-    "security"
-  ],
   "menuLabel": "menu.label",
   "menuEntries": [
     {"id": "uid test 0","url": "https://opfab.github.io/","label": "menu.first"},
@@ -148,6 +124,7 @@ Here is an example of a simple config.json file:
   ],
   "states": {
     "firstState": {
+      "name" :"mystate.label",
       "details": [
         {
           "title": {
@@ -192,7 +169,11 @@ The id of the card is now build as process.processInstanceId an not anymore publ
 
 == Change on the web-ui.json 
 
-The parameter operatorfabric.navbar.thirdmenus.type is rename operatorfabric.navbar.businessmenus.type
+The parameter navbar.thirdmenus.type has been removed from this file. Starting from this release the related functionality has been moved on bundle basis and it's not more global. See "Changes on bundle config.json" for more information.
+
+== Changes on bundle config.json
+
+Under menuEntries a new subproperty has been added: linkType. This property replace the old property navbar.thirdmenus.type in web-ui.json, making possible a more fine control of the related behaviour.
 
 == Component name 
 
@@ -215,7 +196,7 @@ version while there are still "old" bundles in the businessconfig storage will c
 . Edit your bundles as detailed above. In particular, if you had bundles containing several processes, you will need to
 split them into several bundles. The `id` of the bundles should match the `process` field in the corresponding cards.
 
-. If you user operatorfabric.navbar.thirdmenus.type in web-ui.json, rename it to operatorfabric.navbar.businessmenus.type
+. If you use navbar.thirdmenus.type in web-ui.json, rename it to navbar.businessmenus.type
 
 . Run the following scripts in the mongo shell to copy the value of `publisherVersion` to a new `processVersion` field and to copy the value of `processId` to a new `processInstanceId` field for all cards (current and archived):
 

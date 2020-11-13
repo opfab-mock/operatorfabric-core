@@ -1,0 +1,23 @@
+{
+  "id": "defaultProcess",
+  "name": "Test api",
+  "version": "0.1",
+  "states": {
+    "messageState": {
+      "name":  "defaultProcess.title",
+      "color": "#FAF0AF",
+      "details": [
+        {
+          "title": {
+            "key": "defaultProcess.title"
+          },
+          "templateName": "template",
+          "styles": [
+            "style"
+          ]
+        }
+      ],
+      "acknowledgementAllowed": true
+    }
+  }
+}

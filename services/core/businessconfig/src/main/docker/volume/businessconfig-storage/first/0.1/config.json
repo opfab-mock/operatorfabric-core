@@ -1,13 +1,11 @@
 {
   "id": "first",
   "version": "0.1",
-  "templates": [
-    "template",
-    "template1"
-  ],
-  "csses": [
-    "style1"
-  ],
+  "uiVisibility": {
+    "monitoring": true,
+    "logging": true,
+    "calendar": true
+  },
   "medias": {
     "bidon": {
       "name": "bidon",

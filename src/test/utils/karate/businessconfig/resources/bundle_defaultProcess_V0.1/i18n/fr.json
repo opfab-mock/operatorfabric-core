@@ -1,0 +1,12 @@
+{
+	"process": {"label": "Processus d'example V0.1"},
+	"name": "test API",
+	"defaultProcess":{
+		"title":"Message (V0.1)",
+		"summary":"Message reçu"
+	},
+	"message":{
+		"title":"Message (V0.1)",
+		"summary":"Message reçu"
+	}
+}

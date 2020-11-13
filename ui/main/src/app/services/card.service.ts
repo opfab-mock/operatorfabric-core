@@ -9,49 +9,59 @@
 
 
 import {Injectable} from '@angular/core';
-import {Observable, of, Subject} from 'rxjs';
-import {CardOperation} from '@ofModel/card-operation.model';
+import {Observable, Subject} from 'rxjs';
+import {CardOperation, CardOperationType} from '@ofModel/card-operation.model';
 import {EventSourcePolyfill} from 'ng-event-source';
 import {AuthenticationService} from './authentication/authentication.service';
-import {Card, CardData} from '@ofModel/card.model';
+import {Card, CardData, CardForPublishing} from '@ofModel/card.model';
 import {HttpClient, HttpParams, HttpResponse} from '@angular/common/http';
 import {environment} from '@env/environment';
 import {GuidService} from '@ofServices/guid.service';
-import {LightCard} from '@ofModel/light-card.model';
+import {LightCard, PublisherType} from '@ofModel/light-card.model';
 import {Page} from '@ofModel/page.model';
 import {NotifyService} from '@ofServices/notify.service';
 import {AppState} from '@ofStore/index';
 import {Store} from '@ngrx/store';
 import {CardSubscriptionClosed, CardSubscriptionOpen} from '@ofActions/cards-subscription.actions';
 import {LineOfLoggingResult} from '@ofModel/line-of-logging-result.model';
-import {map,catchError} from 'rxjs/operators';
+import {catchError, map} from 'rxjs/operators';
 import * as moment from 'moment';
 import {I18n} from '@ofModel/i18n.model';
 import {LineOfMonitoringResult} from '@ofModel/line-of-monitoring-result.model';
-import {CardOperationType} from '@ofModel/card-operation.model';
 import {
     AddLightCardFailure,
     HandleUnexpectedError,
     LoadLightCardsSuccess,
     RemoveLightCard
 } from '@ofActions/light-card.actions';
+import {EntitiesService} from '@ofServices/entities.service';
 
 @Injectable()
 export class CardService {
-    private static MINIMUM_DELAY_FOR_SUBSCRIPTION = 2000;
+
+    private static TWO_MINUTES = 120000;
+
     readonly cardOperationsUrl: string;
     readonly cardsUrl: string;
     readonly archivesUrl: string;
     readonly cardsPubUrl: string;
     readonly userAckUrl: string;
     readonly userCardReadUrl: string;
+    readonly userCardUrl: string;
+    private lastHeardBeatDate: number;
+    private firstSubscriptionInitDone = false;
     public initSubscription = new Subject<void>();
+
+    private startOfAlreadyLoadedPeriod: number;
+    private endOfAlreadyLoadedPeriod: number;
+
 
     constructor(private httpClient: HttpClient,
                 private notifyService: NotifyService,
                 private guidService: GuidService,
                 private store: Store<AppState>,
-                private authService: AuthenticationService) {
+                private authService: AuthenticationService,
+                private entitiesService: EntitiesService) {
         const clientId = this.guidService.getCurrentGuidString();
         this.cardOperationsUrl = `${environment.urls.cards}/cardSubscription?clientId=${clientId}`;
         this.cardsUrl = `${environment.urls.cards}/cards`;
@@ -59,6 +69,7 @@ export class CardService {
         this.cardsPubUrl = `${environment.urls.cardspub}/cards`;
         this.userAckUrl = `${environment.urls.cardspub}/cards/userAcknowledgement`;
         this.userCardReadUrl = `${environment.urls.cardspub}/cards/userCardRead`;
+        this.userCardUrl = `${environment.urls.cardspub}/cards/userCard`;
     }
 
     loadCard(id: string): Observable<CardData> {
@@ -66,28 +77,32 @@ export class CardService {
     }
 
 
-    public initCardSubscription(){
+    public initCardSubscription() {
         this.getCardSubscription()
             .subscribe(
                 operation => {
                     switch (operation.type) {
                         case CardOperationType.ADD:
-                            this.store.dispatch(new LoadLightCardsSuccess({ lightCards: operation.cards }));
+                            console.log(new Date().toISOString(), `CardService - Receive card to add id=`, operation.cards[0].id);
+                            this.store.dispatch(new LoadLightCardsSuccess({lightCards: operation.cards}));
                             break;
                         case CardOperationType.DELETE:
-                            this.store.dispatch(new RemoveLightCard({ cards: operation.cardIds }));
+                            console.log(new Date().toISOString(), `CardService - Receive card to delete id=`, operation.cardIds[0]);
+                            this.store.dispatch(new RemoveLightCard({cards: operation.cardIds}));
                             break;
                         default:
                             this.store.dispatch(new AddLightCardFailure(
-                                { error: new Error(`unhandled action type '${operation.type}'`) })
-                            );  
+                                {error: new Error(`unhandled action type '${operation.type}'`)})
+                            );
                     }
-                },(error)=> {
-                this.store.dispatch(new AddLightCardFailure({ error: error }));
+                }, (error) => {
+                    console.error('CardService - Error received from  getCardSubscription ', error);
+                    this.store.dispatch(new AddLightCardFailure({error: error}));
                 }
             );
         catchError((error, caught) => {
-            this.store.dispatch(new HandleUnexpectedError({ error: error }));
+            console.error('CardService - Global  error in subscription ', error);
+            this.store.dispatch(new HandleUnexpectedError({error: error}));
             return caught;
         });
     }
@@ -95,18 +110,12 @@ export class CardService {
 
     private getCardSubscription(): Observable<CardOperation> {
         // security header needed here as SSE request are not intercepted by our header interceptor
-        const oneYearInMilliseconds = 31536000000;
         const eventSource = new EventSourcePolyfill(
             `${this.cardOperationsUrl}&notification=true`
             , {
                 headers: this.authService.getSecurityHeader(),
-                /** We loose sometimes cards when reconnecting after a heartbeat timeout
-                 * ..there 's no way to inhibit this heartbeat timeout
-                 * so putting it to 31536000000 milliseconds make it sufficiently long (1 year)
-                 * Anyway the token will expire long before and the connection will restart
-                 */
-                heartbeatTimeout: oneYearInMilliseconds
-            })
+                // if necessary , we cans set here  heartbeatTimeout: xxx (in ms)
+            });
         return Observable.create(observer => {
             try {
                 eventSource.onmessage = message => {
@@ -114,24 +123,36 @@ export class CardService {
                     if (!message) {
                         return observer.error(message);
                     }
-                    if (message.data === "INIT") {
-                        console.log(new Date().toISOString(),`Card subscription initialized`);
-                        this.initSubscription.next();
-                        this.initSubscription.complete();
+                    switch (message.data) {
+                        case 'INIT':
+                            console.log(new Date().toISOString(), `CardService - Card subscription initialized`);
+                            this.initSubscription.next();
+                            this.initSubscription.complete();
+                            if (this.firstSubscriptionInitDone) this.recoverAnyLostCardWhenConnectionHasBeenReset();
+                            else this.firstSubscriptionInitDone = true;
+                            break;
+                        case 'HEARTBEAT':
+                            this.lastHeardBeatDate = new Date().valueOf();
+                            console.log(new Date().toISOString(), `CardService - HEARTBEAT received - Connection alive `);
+                            break;
+                        case 'RESTORE':
+                            console.log(new Date().toISOString(), `CardService - Subscription restored with server`);
+                            break;
+                        default :
+                            return observer.next(JSON.parse(message.data, CardOperation.convertTypeIntoEnum));
                     }
-                    else return observer.next(JSON.parse(message.data, CardOperation.convertTypeIntoEnum));
                 };
                 eventSource.onerror = error => {
                     this.store.dispatch(new CardSubscriptionClosed());
-                    console.error(new Date().toISOString(),'Error occurred in card subscription:', error);
+                    console.error(new Date().toISOString(), 'CardService - Error event in card subscription:', error);
                 };
                 eventSource.onopen = open => {
                     this.store.dispatch(new CardSubscriptionOpen());
-                    console.log(new Date().toISOString(),`Open card subscription`);
+                    console.log(new Date().toISOString(), `CardService- Open card subscription`);
                 };
-             
+
             } catch (error) {
-                console.error(new Date().toISOString(),'an error occurred', error);
+                console.error(new Date().toISOString(), 'CardService - Error in interpreting message from subscription', error);
                 return observer.error(error);
             }
             return () => {
@@ -143,12 +164,51 @@ export class CardService {
     }
 
 
-    public setSubscriptionDates(rangeStart: number, rangeEnd: number) {
+    private recoverAnyLostCardWhenConnectionHasBeenReset() {
 
-        console.log(new Date().toISOString(),`Set subscription date ${rangeStart} - ${rangeEnd}`);
+        // Subtracts two minutes from the last heard beat to avoid loosing card due to latency, buffering and not synchronized clock
+        const dateForRecovering = this.lastHeardBeatDate - CardService.TWO_MINUTES;
+
+        console.log(new Date().toISOString(), `CardService - Card subscription has been init again , recover any lost card from date `
+            + new Date(dateForRecovering));
         this.httpClient.post<any>(
             `${this.cardOperationsUrl}`,
-            { rangeStart: rangeStart, rangeEnd: rangeEnd }).subscribe();
+            {publishFrom: dateForRecovering}).subscribe();
+
+    }
+
+    public setSubscriptionDates(start: number, end: number) {
+        console.log(new Date().toISOString(), 'CardService - Set subscription date', new Date(start), ' -', new Date(end));
+        if (!this.startOfAlreadyLoadedPeriod) { // First loading , no card loaded yet
+            this.askCardsForPeriod(start, end);
+            return;
+        }
+        if ((start < this.startOfAlreadyLoadedPeriod) && (end > this.endOfAlreadyLoadedPeriod)) {
+            this.askCardsForPeriod(start, end);
+            return;
+        }
+        if (start < this.startOfAlreadyLoadedPeriod) {
+            this.askCardsForPeriod(start, this.startOfAlreadyLoadedPeriod);
+            return;
+        }
+        if (end > this.endOfAlreadyLoadedPeriod) {
+            this.askCardsForPeriod(this.endOfAlreadyLoadedPeriod, end);
+            return;
+        }
+        console.log(new Date().toISOString(), 'CardService - Card already loaded for the chosen period');
+    }
+
+    private askCardsForPeriod(start: number, end: number) {
+        console.log(new Date().toISOString(), 'CardService - Need to load card for period '
+            , new Date(start), ' -', new Date(end));
+        this.httpClient.post<any>(
+            `${this.cardOperationsUrl}`,
+            { rangeStart: start, rangeEnd: end }).subscribe(result => {
+                if ((!this.startOfAlreadyLoadedPeriod) || (start < this.startOfAlreadyLoadedPeriod))
+                    this.startOfAlreadyLoadedPeriod = start;
+                if ((!this.endOfAlreadyLoadedPeriod) || (end > this.endOfAlreadyLoadedPeriod)) this.endOfAlreadyLoadedPeriod = end;
+
+            });
 
     }
 
@@ -168,21 +228,29 @@ export class CardService {
         return params;
     }
 
-    postResponseCard(card: Card) {
+    postCard(card: CardForPublishing): any {
         const headers = this.authService.getSecurityHeader();
-        return this.httpClient.post<Card>(`${this.cardsPubUrl}/userCard`, card, {headers});
+        return this.httpClient.post<CardForPublishing>(`${this.cardsPubUrl}/userCard`, card, {headers});
     }
 
-    postUserAcnowledgement(card: Card): Observable<HttpResponse<void>> {
-        return this.httpClient.post<void>(`${this.userAckUrl}/${card.uid}`, null, {observe: 'response'});
+    postUserAcknowledgement(cardUid: string): Observable<HttpResponse<void>> {
+        return this.httpClient.post<void>(`${this.userAckUrl}/${cardUid}`, null, {observe: 'response'});
     }
 
-    deleteUserAcnowledgement(card: Card): Observable<HttpResponse<void>> {
-        return this.httpClient.delete<void>(`${this.userAckUrl}/${card.uid}`, {observe: 'response'});
+    deleteUserAcknowledgement(cardUid: string): Observable<HttpResponse<void>> {
+        return this.httpClient.delete<void>(`${this.userAckUrl}/${cardUid}`, {observe: 'response'});
     }
 
-    postUserCardRead(card: Card): Observable<HttpResponse<void>> {
-        return this.httpClient.post<void>(`${this.userCardReadUrl}/${card.uid}`, null, {observe: 'response'});
+    deleteCard(card: Card): Observable<HttpResponse<void>> {
+        return this.httpClient.delete<void>(`${this.userCardUrl}/${card.id}`, {observe: 'response'});
+    }
+
+    postUserCardRead(cardUid: string): Observable<HttpResponse<void>> {
+        return this.httpClient.post<void>(`${this.userCardReadUrl}/${cardUid}`, null, {observe: 'response'});
+    }
+
+    deleteUserCardRead(cardUid: string): Observable<HttpResponse<void>> {
+        return this.httpClient.delete<void>(`${this.userCardReadUrl}/${cardUid}`, {observe: 'response'});
     }
 
     fetchLoggingResults(filters: Map<string, string[]>): Observable<Page<LineOfLoggingResult>> {
@@ -190,13 +258,19 @@ export class CardService {
             map((page: Page<LightCard>) => {
                 const cards = page.content;
                 const lines = cards.map((card: LightCard) => {
-                    const i18nPrefix = `${card.publisher}.${card.processVersion}.`;
+                    const i18nPrefix = `${card.process}.${card.processVersion}.`;
+                    const publisherType = card.publisherType;
+                    const enumThirdParty = PublisherType.EXTERNAL;
+                    const isThirdPartyPublisher = enumThirdParty === PublisherType[publisherType];
+                    const sender = (isThirdPartyPublisher) ? 'SYSTEM' : this.entitiesService.getEntityName(card.publisher);
                     return ({
+                        process: card.process,
+                        processVersion: card.processVersion,
                         cardType: card.severity.toLowerCase(),
                         businessDate: moment(card.startDate),
                         i18nKeyForProcessName: this.addPrefix(i18nPrefix, card.title),
                         i18nKeyForDescription: this.addPrefix(i18nPrefix, card.summary),
-                        sender: card.publisher
+                        sender: sender
                     } as LineOfLoggingResult);
                 });
                 return {
@@ -209,7 +283,7 @@ export class CardService {
     }
 
     addPrefix(i18nPrefix: string, initialI18n: I18n): I18n {
-        return { ...initialI18n, key: i18nPrefix + initialI18n.key} as I18n;
+        return {...initialI18n, key: i18nPrefix + initialI18n.key} as I18n;
     }
 
     fetchMonitoringResults(filters: Map<string, string[]>): Observable<Page<LineOfMonitoringResult>> {

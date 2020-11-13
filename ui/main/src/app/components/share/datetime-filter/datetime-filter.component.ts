@@ -7,12 +7,13 @@
  * This file is part of the OperatorFabric project.
  */
 
-
-import {Component, forwardRef, Input, OnInit, OnDestroy} from '@angular/core';
+import * as moment from 'moment';
+import {AfterViewInit, Component, forwardRef, Input, OnDestroy, OnInit} from '@angular/core';
 import {ControlValueAccessor, FormControl, FormGroup, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {NgbDateStruct, NgbTimeStruct} from '@ng-bootstrap/ng-bootstrap';
-import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import {NgbDateStruct} from '@ng-bootstrap/ng-bootstrap';
+import {takeUntil} from 'rxjs/operators';
+import {Subject} from 'rxjs';
+import {getDateTimeNgbFromMoment, offSetCurrentTime} from '@ofModel/datetime-ngb.model';
 
 @Component({
     selector: 'of-datetime-filter',
@@ -28,16 +29,21 @@ import { Subject } from 'rxjs';
 export class DatetimeFilterComponent implements ControlValueAccessor, OnInit, OnDestroy {
 
     private ngUnsubscribe$ = new Subject<void>();
-
     @Input() labelKey: string;
-    disabled = true;
-    time = {hour: 0, minute: 0};
     @Input() filterPath: string;
     @Input() defaultDate: NgbDateStruct;
     @Input() defaultTime: { hour: number, minute: number };
+    // no "unit of time enforcement", so be careful using offset
+    @Input() offset: { amount: number, unit: string }[];
+
+    disabled = true;
+    time = {hour: 0, minute: 0};
+
+    dateInput = new FormControl();
+    timeInput = new FormControl();
     public datetimeForm: FormGroup = new FormGroup({
-        date: new FormControl(),
-        time: new FormControl()
+        date: this.dateInput,
+        time: this.timeInput
     });
 
     constructor() {
@@ -47,6 +53,18 @@ export class DatetimeFilterComponent implements ControlValueAccessor, OnInit, On
     }
 
     ngOnInit() {
+        if (!!this.offset) {
+            const converted = offSetCurrentTime(this.offset);
+            this.defaultDate = converted.date;
+            this.defaultTime = converted.time;
+            this.disabled = false;
+            this.dateInput.setValue(this.defaultDate);
+            this.timeInput.setValue(this.defaultTime);
+
+            this.dateInput.updateValueAndValidity({onlySelf: false, emitEvent: false});
+            this.datetimeForm.updateValueAndValidity({onlySelf: false, emitEvent: true});
+
+        }
     }
 
     ngOnDestroy() {
@@ -58,14 +76,13 @@ export class DatetimeFilterComponent implements ControlValueAccessor, OnInit, On
     public onTouched: () => void = () => {
     }
 
-    // Method call when archive-filter.component.ts set value to 0
+    // Method call when archive-filter.component.ts set value to null
     writeValue(val: any): void {
-        this.disabled = true;
-        this.resetDateAndTime();
-
-        if (val) {
-            this.datetimeForm.setValue(val, {emitEvent: false});
+        if (!this.offset) {
+            this.disabled = true;
         }
+        if (!!val) this.datetimeForm.setValue(val, {emitEvent: false});
+        else this.resetDateAndTime();
     }
 
     registerOnChange(fn: any): void {
@@ -83,7 +100,12 @@ export class DatetimeFilterComponent implements ControlValueAccessor, OnInit, On
 
     // Set time to enable when a date has been set
     onChanges(): void {
-        this.datetimeForm.get('date').valueChanges.pipe(takeUntil(this.ngUnsubscribe$)).subscribe(val => {
+        this.dateInput.valueChanges.pipe(takeUntil(this.ngUnsubscribe$)).subscribe(val => {
+            if (val) {
+                this.disabled = false;
+            }
+        });
+        this.timeInput.valueChanges.pipe(takeUntil(this.ngUnsubscribe$)).subscribe(val => {
             if (val) {
                 this.disabled = false;
             }
@@ -99,21 +121,19 @@ export class DatetimeFilterComponent implements ControlValueAccessor, OnInit, On
     }
 
     resetDateAndTime() {
-        const time = this.datetimeForm.get('time');
         let val = {hour: 0, minute: 0};
         if (!!this.defaultTime) {
             val = this.defaultTime;
         }
         // option `{emitEvent: false})` to reset completely control and mark it as 'pristine'
-        time.reset(val, {emitEvent: false});
+        this.timeInput.reset(val, {emitEvent: false});
 
-        const date = this.datetimeForm.get('date');
         let dateVal = null;
         if (this.defaultDate) {
             dateVal = this.defaultDate;
         }
         // option `{emitEvent: false})` to reset completely control and mark it as 'pristine'
-        date.reset(dateVal, {emitEvent: false});
+        this.dateInput.reset(dateVal, {emitEvent: false});
 
     }
 

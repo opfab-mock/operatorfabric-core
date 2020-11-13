@@ -13,7 +13,11 @@ package org.lfenergy.operatorfabric.cards.publication.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Singular;
 import org.lfenergy.operatorfabric.cards.model.SeverityEnum;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -22,7 +26,6 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +53,12 @@ public class CardPublicationData implements Card {
     @Id
     private String id;
 
-    private String parentCardUid;
+    private String parentCardId;
+
+    private String initialParentCardUid;
+
+    @Builder.Default
+    private Boolean keepChildCards = false;
 
     private String publisher;
     
@@ -67,8 +75,6 @@ public class CardPublicationData implements Card {
     private I18n summary;
     @CreatedDate
     private Instant publishDate;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Instant deletionDate;
     private Instant lttd;
     
     @Indexed
@@ -119,6 +125,8 @@ public class CardPublicationData implements Card {
     private Boolean hasBeenRead;
     @Indexed
     private String processStateKey;
+    @Builder.Default
+    private PublisherTypeEnum publisherType = PublisherTypeEnum.EXTERNAL;
 
     public void prepare(Instant publishDate) {
         this.publishDate = publishDate;
@@ -137,7 +145,9 @@ public class CardPublicationData implements Card {
         LightCardPublicationData.LightCardPublicationDataBuilder result = LightCardPublicationData.builder()
                 .id(this.getId())
                 .uid(this.getUid())
-                .parentCardUid(this.getParentCardUid())
+                .parentCardId(this.getParentCardId())
+                .initialParentCardUid(this.getInitialParentCardUid())
+                .keepChildCards(this.getKeepChildCards())
                 .publisher(this.getPublisher())
                 .processVersion(this.getProcessVersion())
                 .process(this.getProcess())
@@ -149,8 +159,11 @@ public class CardPublicationData implements Card {
                 .publishDate(this.getPublishDate())
                 .severity(this.getSeverity())
                 .tags(this.getTags())
+                .entitiesAllowedToRespond(this.getEntitiesAllowedToRespond())
                 .title(((I18nPublicationData) this.getTitle()).copy())
-                .summary(((I18nPublicationData) this.getSummary()).copy());
+                .summary(((I18nPublicationData) this.getSummary()).copy())
+                .publisherType(this.getPublisherType())
+                ;
         if(this.getTimeSpans()!=null)
             result.timeSpansSet(new HashSet<>(this.getTimeSpans()));
         return result.build();

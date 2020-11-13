@@ -1,0 +1,64 @@
+{
+  "id": "userCardExamples",
+  "name": "userCardExamples.label",
+  "version": "1",
+  "uiVisibility": {
+    "monitoring": true,
+    "logging": true,
+    "calendar": true
+  },
+  "states": {
+    "messageState": {
+      "name":  "message.title",
+      "color": "#FAF0AF",
+      "userCardTemplate": "usercard_message",
+      "details": [
+        {
+          "title": {
+            "key": "message.title"
+          },
+          "templateName": "message",
+          "styles": [
+          ]
+        }
+      ],
+      "acknowledgementAllowed": true
+    },
+    "conferenceState": {
+      "name":  "conference.title",
+      "color": "#FAF0AF",
+      "userCardTemplate": "usercard_conference",
+      "secondsBeforeTimeSpanForReminder" : 300,
+      "details": [
+        {
+          "title": {
+            "key": "conference.title"
+          },
+          "templateName": "conference",
+          "styles": [
+          ]
+        }
+      ],
+      "acknowledgementAllowed": true
+    },
+    "questionState": {
+      "name": "question.title",
+      "color": "#8bcdcd",
+      "userCardTemplate": "usercard_question",
+      "response": {
+        "state": "questionState"
+      },
+      "details": [
+        {
+          "title": {
+            "key": "question.title"
+          },
+          "templateName": "question",
+          "styles": [
+          ]
+        }
+      ],
+      "acknowledgementAllowed": false
+    }   
+  }
+}

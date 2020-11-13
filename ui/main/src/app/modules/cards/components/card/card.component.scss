@@ -12,6 +12,13 @@
 .light-card-detail {
   background-color: var(--opfab-lightcard-detail-bgcolor);
   color: var(--opfab-lightcard-detail-textcolor);
+  border-color: var(--opfab-lightcard-detail-border-color)
+}
+ 
+
+.light-card-detail-selected {
+  border-color: var(--opfab-lightcard-detail-selected-border-color);
+  //#f8f9fa
 }
 
 .card {
@@ -35,4 +42,19 @@
 .badge-border {
   width: 30px;
   text-align: center;
+}
+
+.lttd-timeleft{
+  font-size: small;
+  color: var(--opfab-light-card-lttd-timeleft);
+}
+.lttd-text{
+  font-size: small;
+  padding-left : 160px;
+  padding-right: 10px;
+}
+
+.lttd-icon{  
+  font-size:20px;
+  padding-left: 6px;
 }

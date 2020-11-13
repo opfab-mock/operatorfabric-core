@@ -1,10 +1,14 @@
 {
 	"id":"api_test",
 	"version":"2",
-	"templates":["template"],
-	"csses":["style"],
+	"uiVisibility": {
+		"monitoring": true,
+		"logging": true,
+		"calendar": true
+	},
 	"states":{
 		"messageState" : {
+			"secondsBeforeTimeSpanForReminder" : 500,
 			"details" : [{
 				"title" : { "key" : "detail.title"},
 				"templateName" : "template",

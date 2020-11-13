@@ -43,7 +43,10 @@ public class ArchivedCardConsultationData implements Card {
     private String uid;
     @Id
     private String id;
-    private String parentCardUid;
+    private String parentCardId;
+    private String initialParentCardUid;
+    @Builder.Default
+    private Boolean keepChildCards = false;
     private String publisher;
     private String processVersion;
     private String process;
@@ -53,9 +56,6 @@ public class ArchivedCardConsultationData implements Card {
     private I18n summary;
     @CreatedDate
     private Instant publishDate;
-    @Transient
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Instant deletionDate;
     private Instant lttd;
     @Indexed
     private Instant startDate;
@@ -100,4 +100,5 @@ public class ArchivedCardConsultationData implements Card {
     @JsonIgnore
     @Transient
     private Boolean hasBeenRead;
+    private PublisherTypeEnum publisherType;
 }

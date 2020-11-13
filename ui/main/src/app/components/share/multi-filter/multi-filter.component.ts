@@ -30,9 +30,7 @@ export class MultiFilterComponent implements OnInit {
     @Input() public valuesInObservable: Observable<any>;
 
     constructor(private translateService: TranslateService) {
-        this.parentForm = new FormGroup({
-            [this.filterPath]: new FormControl()
-        });
+
     }
 
     ngOnInit() {
@@ -45,7 +43,8 @@ export class MultiFilterComponent implements OnInit {
         } else {
             if (!!this.valuesInObservable) {
                 this.valuesInObservable.pipe(
-                    map((values: ({ value: string, label: (I18n | string) } | string)[]) => {
+                    map((values: ({ value: string, label: (I18n | string), i18NPrefix?: string } | string)[]) => {
+                            this.preparedList = [];
                             for (const v of values) {
                                 this.preparedList.push(this.computeValueAndLabel(v));
                             }
@@ -60,7 +59,8 @@ export class MultiFilterComponent implements OnInit {
         return this.i18nRootLabelKey + this.filterPath;
     }
 
-    computeValueAndLabel(entry: ({ value: string, label: (I18n | string) } | string)): { value: string, label: Observable<string> } {
+    computeValueAndLabel(entry: ({ value: string, label: (I18n | string), i18nPrefix?: string } | string)):
+        { value: string, label: Observable<string> } {
         if (typeof entry === 'string') {
             return {value: entry, label: of(entry)};
         } else if (typeof entry.label === 'string') {
@@ -68,10 +68,12 @@ export class MultiFilterComponent implements OnInit {
         } else if (!entry.label) {
             return {value: entry.value, label: of(entry.value)};
         }
-            return {
-                value: entry.value,
-                label: this.translateService.get(entry.label.key, entry.label.parameters)
-            };
+        // mind the trailing dot! mandatory for translation if I18n prefix exists
+        const i18nPrefix = (entry.i18nPrefix) ? `${entry.i18nPrefix}.` : '';
+        return {
+            value: entry.value,
+            label: this.translateService.get(`${i18nPrefix}${entry.label.key}`, entry.label.parameters)
+        };
 
     }
 

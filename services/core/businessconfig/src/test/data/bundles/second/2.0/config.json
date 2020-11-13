@@ -1,20 +1,23 @@
 {
   "id": "second",
-  "name": {"key":"process.title"},
+  "name": "process.title",
   "version": "2.0",
-  "templates": [
-    "template"
-  ],
-  "csses": [
-    "dastyle"
-  ],
   "locales": [
     "fr",
     "en"
   ],
   "states": {
     "firstState": {
-      "name": {"key": "process.title"},
+      "name": "process.title",
+      "response": {
+        "lock": true,
+        "state": "responseState",
+        "btnColor": "GREEN",
+        "btnText": {
+          "key": "question.button.text"
+        },
+        "externalRecipients": ["externalRecipient1", "externalRecipient2"]
+      },
       "details": [
         {
           "title": {

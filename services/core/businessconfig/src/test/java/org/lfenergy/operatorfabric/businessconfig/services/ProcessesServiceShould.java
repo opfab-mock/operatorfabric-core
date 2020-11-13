@@ -60,6 +60,7 @@ class ProcessesServiceShould {
   void prepare() throws IOException {
     copy(Paths.get("./src/test/docker/volume/businessconfig-storage"), testDataDir);
     service.loadCache();
+    service.loadProcessGroupsCache();
   }
 
   @AfterAll
@@ -213,6 +214,7 @@ class ProcessesServiceShould {
         assertThat(process).hasFieldOrPropertyWithValue("version", "2.0");
         assertThat(process.getStates().size()).isEqualTo(1);
         assertThat(process.getStates().get("firstState").getDetails().size()).isEqualTo(1);
+        assertThat(process.getStates().get("firstState").getResponse().getExternalRecipients().size()).isEqualTo(2);
         assertThat(service.listProcesses()).hasSize(3);
       } catch (IOException e) {
         log.trace("rethrowing exception");
@@ -306,11 +308,11 @@ class ProcessesServiceShould {
     	
     	@Test
         void deleteBundleByNameAndVersionHavingOnlyOneVersion() throws Exception {
-    		Path bundleDir = testDataDir.resolve("businessconfig");
+    		Path bundleDir = testDataDir.resolve("deletetest");
     		Assertions.assertTrue(Files.isDirectory(bundleDir));
-            service.deleteVersion("businessconfig","2.1");
-            Assertions.assertNull(service.fetch("businessconfig","2.1"));
-            Assertions.assertNull(service.fetch("businessconfig"));            
+            service.deleteVersion("deletetest","2.1");
+            Assertions.assertNull(service.fetch("deletetest","2.1"));
+            Assertions.assertNull(service.fetch("deletetest"));            
             Assertions.assertFalse(Files.isDirectory(bundleDir));
     	}
     	

@@ -14,6 +14,7 @@ import com.mongodb.client.result.UpdateResult;
 import lombok.extern.slf4j.Slf4j;
 import org.lfenergy.operatorfabric.cards.publication.model.ArchivedCardPublicationData;
 import org.lfenergy.operatorfabric.cards.publication.model.CardPublicationData;
+import org.lfenergy.operatorfabric.users.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -42,6 +43,12 @@ public class CardRepositoryService {
         query.addCriteria(Criteria.where("uid").is(uid));
         return Optional.ofNullable(template.findOne(query, CardPublicationData.class));
     }
+
+    public Optional<ArchivedCardPublicationData> findArchivedCardByUid(String uid) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("id").is(uid));
+        return Optional.ofNullable(template.findOne(query, ArchivedCardPublicationData.class));
+    }
 	
     public void saveCard(CardPublicationData card) {
         log.debug("preparing to write {}", card.toString());
@@ -58,32 +65,30 @@ public class CardRepositoryService {
 
 
 
-    public CardPublicationData findCardById(String processInstanceId) {
+    public CardPublicationData findCardById(String id) {
         /**
          * Uses a projection instead the default 'findById' method. This projection
          * excludes data which can be unpredictably huge depending on publisher needs.
          */
         Query findCardByIdWithoutDataField = new Query();
         findCardByIdWithoutDataField.fields().exclude("data");
-        findCardByIdWithoutDataField.addCriteria(Criteria.where("Id").is(processInstanceId));
+        findCardByIdWithoutDataField.addCriteria(Criteria.where("Id").is(id));
 
         return this.template.findOne(findCardByIdWithoutDataField, CardPublicationData.class);
     }
 
     public Optional<List<CardPublicationData>> findChildCard(CardPublicationData card) {
-
         if (Objects.isNull(card)) return Optional.empty();
-        Query findCardByParentCardUidWithoutDataField = new Query();
-        findCardByParentCardUidWithoutDataField.fields().exclude("data");
-        findCardByParentCardUidWithoutDataField.addCriteria(Criteria.where("parentCardUid").is(card.getUid()));
-        return Optional.ofNullable(template.find(findCardByParentCardUidWithoutDataField, CardPublicationData.class));
 
-
+        Query findCardByParentCardIdWithoutDataField = new Query();
+        findCardByParentCardIdWithoutDataField.fields().exclude("data");
+        findCardByParentCardIdWithoutDataField.addCriteria(Criteria.where("parentCardId").is(card.getId()));
+        return Optional.ofNullable(template.find(findCardByParentCardIdWithoutDataField, CardPublicationData.class));
     }
 
-	public UserBasedOperationResult addUserAck(String name, String cardUid) {
+	public UserBasedOperationResult addUserAck(User user, String cardUid) {
 		UpdateResult updateFirst = template.updateFirst(Query.query(Criteria.where("uid").is(cardUid)), 
-				new Update().addToSet("usersAcks", name),CardPublicationData.class);
+				new Update().addToSet("usersAcks", user.getLogin()),CardPublicationData.class);
 		log.debug("added {} occurrence of {}'s userAcks in the card with uid: {}", updateFirst.getModifiedCount(),
 				cardUid);
 		return toUserBasedOperationResult(updateFirst);
@@ -104,7 +109,15 @@ public class CardRepositoryService {
 				cardUid);
 		return toUserBasedOperationResult(updateFirst);
 	}
-	
+
+    public UserBasedOperationResult deleteUserRead(String userName, String cardUid) {
+		UpdateResult updateFirst = template.updateFirst(Query.query(Criteria.where("uid").is(cardUid)),
+				new Update().pull("usersReads", userName), CardPublicationData.class);
+		log.debug("removed {} occurrence of {}'s usersReads in the card with uid: {}", updateFirst.getModifiedCount(),
+				cardUid);
+		return toUserBasedOperationResult(updateFirst);
+    }
+
 	private UserBasedOperationResult toUserBasedOperationResult(UpdateResult updateResult) {
 		UserBasedOperationResult res = null;
 		if (updateResult.getMatchedCount() == 0) {
@@ -114,7 +127,4 @@ public class CardRepositoryService {
 		}
 		return res;
 	}
-    
-    
-
 }

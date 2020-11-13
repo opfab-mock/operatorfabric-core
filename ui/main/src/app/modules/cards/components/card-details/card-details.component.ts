@@ -1,36 +1,51 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Card, Detail} from '@ofModel/card.model';
-import { Store } from '@ngrx/store';
-import { AppState } from '@ofStore/index';
+/* Copyright (c) 2018-2020, RTE (http://www.rte-france.com)
+ * See AUTHORS.txt
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * SPDX-License-Identifier: MPL-2.0
+ * This file is part of the OperatorFabric project.
+ */
+
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Card} from '@ofModel/card.model';
+import {Store} from '@ngrx/store';
+import {AppState} from '@ofStore/index';
 import * as cardSelectors from '@ofStore/selectors/card.selectors';
-import { ProcessesService } from "@ofServices/processes.service";
+import {ProcessesService} from '@ofServices/processes.service';
 import {Subject} from 'rxjs';
-import {takeUntil, switchMap} from 'rxjs/operators';
-import { selectIdentifier } from '@ofStore/selectors/authentication.selectors';
-import { UserService } from '@ofServices/user.service';
-import { User } from '@ofModel/user.model';
-import { UserWithPerimeters } from '@ofModel/userWithPerimeters.model';
-import { selectCurrentUrl } from '@ofStore/selectors/router.selectors';
-import { AppService } from '@ofServices/app.service';
+import {takeUntil} from 'rxjs/operators';
+import {UserService} from '@ofServices/user.service';
+import {User} from '@ofModel/user.model';
+import {selectCurrentUrl} from '@ofStore/selectors/router.selectors';
+import {AppService} from '@ofServices/app.service';
+import {State as CardState, Detail} from '@ofModel/processes.model';
 
 @Component({
     selector: 'of-card-details',
-    templateUrl: './card-details.component.html',
-    styleUrls: ['./card-details.component.scss']
+    template: `
+
+            <div *ngIf="card && cardState">
+                <of-detail   [cardState]="cardState" [card]="card" [childCards]="childCards"
+                           [user]="user" [currentPath]="_currentPath">
+                </of-detail>
+            </div>
+        `
 })
 export class CardDetailsComponent implements OnInit, OnDestroy {
 
     card: Card;
     childCards: Card[];
     user: User;
-    userWithPerimeters: UserWithPerimeters;
-    details: Detail[];
+    cardState: CardState;
     unsubscribe$: Subject<void> = new Subject<void>();
-    private _currentPath: string;
+    protected _currentPath: string;
 
-    constructor(private store: Store<AppState>,
-        private businessconfigService: ProcessesService, private userService: UserService, 
-        private appService: AppService) {
+    constructor(protected store: Store<AppState>
+        , protected businessconfigService: ProcessesService
+        , protected userService: UserService
+        , protected appService?: AppService
+    ) {
     }
 
     ngOnInit() {
@@ -39,64 +54,31 @@ export class CardDetailsComponent implements OnInit, OnDestroy {
             .subscribe(([card, childCards]: [Card, Card[]]) => {
                 this.card = card;
                 this.childCards = childCards;
-                if (card) {
-                    if (card.details) {
-                        this.details = [...card.details];
-                    } else {
-                        this.details = [];
-                    }
+                if (!!card) {
                     this.businessconfigService.queryProcess(this.card.process, this.card.processVersion)
                         .pipe(takeUntil(this.unsubscribe$))
                         .subscribe(businessconfig => {
-                            if (businessconfig) {
-                                const state = businessconfig.extractState(this.card);
-                                if (state != null) {
-                                    this.details.push(...state.details);
-                                }
-                            }
-                        },
-                            error => console.log(`something went wrong while trying to fetch process for ${this.card.process} with ${this.card.processVersion} version.`)
+                                if (!!businessconfig)  this.cardState = businessconfig.extractState(this.card);
+
+                            },
+                            error => console.log(`something went wrong while trying to fetch process for`
+                                + ` ${this.card.process} with ${this.card.processVersion} version.`)
                         );
                 }
             });
 
-        let userId = null;
-        this.store.select(selectIdentifier)
-            .pipe(takeUntil(this.unsubscribe$))
-            .pipe(switchMap(id => {
-                    userId = id;
-                    return this.userService.askUserApplicationRegistered(userId)
-                }))
-            .subscribe(user => {
-                if (user) {
-                    this.user = user
-                }
-            },
-                error => console.log(`something went wrong while trying to ask user application registered service with user id : ${userId}`)
-            );
-
-        this.userService.currentUserWithPerimeters()
-            .pipe(takeUntil(this.unsubscribe$))
-            .subscribe(userWithPerimeters => {
-                if (userWithPerimeters) {
-                    this.userWithPerimeters = userWithPerimeters;
-                }
-            },
-                error => console.log(`something went wrong while trying to have currentUser with perimeters `)
-            );
-
         this.store.select(selectCurrentUrl)
             .pipe(takeUntil(this.unsubscribe$))
             .subscribe(url => {
-                if (url) {
+                if (!!url) {
                     const urlParts = url.split('/');
-                    this._currentPath = urlParts[1];
+                    const CURRENT_PAGE_INDEX = 1;
+                    this._currentPath = urlParts[CURRENT_PAGE_INDEX];
                 }
             });
-    }
 
-    closeDetails() {
-        this.appService.closeDetails(this._currentPath);
+        const userWithPerimeters = this.userService.getCurrentUserWithPerimeters();
+        if (!!userWithPerimeters) this.user = userWithPerimeters.userData;
     }
 
     ngOnDestroy() {

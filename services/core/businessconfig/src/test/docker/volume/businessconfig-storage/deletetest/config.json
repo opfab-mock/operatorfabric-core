@@ -1,0 +1,20 @@
+{
+  "id": "deletetest",
+  "version": "2.1",
+  "locales": [
+    "fr",
+    "en"
+  ],
+  "states": {
+    "firstState": {
+      "details": [
+        {
+          "title": {
+            "key": "template.title"
+          },
+          "templateName": "template"
+        }
+      ]
+    }
+  }
+}

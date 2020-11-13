@@ -12,11 +12,20 @@
 export class User {
 
     public constructor(
-    readonly login:string,
-    readonly firstName:string,
-    readonly lastName:string,
+    readonly login: string,
+    readonly firstName: string,
+    readonly lastName: string,
     readonly groups?: Array<string>,
     readonly entities?: Array<string>
-){}
+) {}
+}
 
+export class Entity {
+
+    constructor(
+        readonly id: string,
+        readonly name: string,
+        readonly description: string
+    ) {
+    }
 }

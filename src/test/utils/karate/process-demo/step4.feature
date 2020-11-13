@@ -16,10 +16,7 @@ Scenario: Step1
 			"process"  :"api_test",
 			"processInstanceId" : "processProcess",
 			"state": "processState",
-			"recipient" : {
-						"type" : "GROUP",
-						"identity" : "TSO1"
-					},
+			"groupRecipients": ["Dispatcher"],
 			"severity" : "COMPLIANT",
 			"startDate" : startDate,
 			"summary" : {"key" : "defaultProcess.summary"},
