@@ -9,7 +9,7 @@
 
 
 
-import {Severity} from '@ofModel/light-card.model';
+import {LightCard, PublisherType, Severity} from '@ofModel/light-card.model';
 import {I18n} from '@ofModel/i18n.model';
 
 export class Card {
@@ -23,7 +23,7 @@ export class Card {
         readonly startDate: number,
         readonly endDate: number,
         readonly severity: Severity,
-        readonly hasBeenAcknowledged: boolean = false,
+        public hasBeenAcknowledged: boolean = false,
         readonly hasBeenRead: boolean = false,
         readonly process?: string,
         readonly processInstanceId?: string,
@@ -32,12 +32,44 @@ export class Card {
         readonly title?: I18n,
         readonly summary?: I18n,
         readonly data?: any,
-        readonly details?: Detail[],
+        readonly userRecipients?: string[],
+        readonly groupRecipients?: string[],
         readonly entityRecipients?: string[],
         readonly externalRecipients?: string[],
         readonly entitiesAllowedToRespond?: string[],
         readonly recipient?: Recipient,
-        readonly parentCardUid?: string
+        readonly parentCardId?: string,
+        readonly initialParentCardUid?: string,
+        readonly publisherType?: PublisherType | string,
+        public timeSpans?: TimeSpan[]
+    ) {
+    }
+}
+
+export class CardForPublishing {
+    constructor(
+        readonly publisher: string,
+        readonly processVersion: string,
+        readonly startDate: number,
+        readonly endDate: number,
+        readonly severity: Severity,
+        readonly process?: string,
+        readonly processInstanceId?: string,
+        readonly state?: string,
+        readonly lttd?: number,
+        readonly title?: I18n,
+        readonly summary?: I18n,
+        readonly data?: any,
+        readonly userRecipients?: string[],
+        readonly groupRecipients?: string[],
+        readonly entityRecipients?: string[],
+        readonly externalRecipients?: string[],
+        readonly entitiesAllowedToRespond?: string[],
+        readonly recipient?: Recipient,
+        readonly parentCardId?: string,
+        readonly initialParentCardUid?: string,
+        readonly publisherType?: PublisherType | string,
+        readonly timeSpans?: TimeSpan[]
     ) {
     }
 }
@@ -47,16 +79,6 @@ export enum TitlePosition {
 
 }
 
-export class Detail {
-    /* istanbul ignore next */
-    constructor(
-        readonly titlePosition: TitlePosition,
-        readonly title: I18n,
-        readonly titleStyle: string,
-        readonly templateName: string,
-        readonly styles: string[]) {
-    }
-}
 
 export class Recipient {
     constructor(
@@ -75,4 +97,44 @@ export class CardData {
         readonly card: Card,
         readonly childCards: Card[]
     ) {}
+}
+
+export class TimeSpan {
+    constructor(
+        readonly start: number,
+        readonly end?: number
+    ) { }
+}
+
+export function fromCardToLightCard(card: Card): LightCard {
+    return new LightCard(card.uid, card.id, card.publisher, card.processVersion, card.publishDate, card.startDate
+        , card.endDate, card.severity, card.hasBeenAcknowledged, card.hasBeenRead, card.processInstanceId
+        , card.lttd, card.title, card.summary, null, [], card.process, card.state, card.parentCardId, card.initialParentCardUid);
+}
+
+export function fromCardToCardForPublishing(card: Card): CardForPublishing {
+    return new CardForPublishing(
+        card.publisher,
+        card.processVersion,
+        card.startDate,
+        card.endDate,
+        card.severity,
+        card.process,
+        card.processInstanceId,
+        card.state,
+        card.lttd,
+        card.title,
+        card.summary,
+        card.data,
+        card.userRecipients,
+        card.groupRecipients,
+        card.entityRecipients,
+        card.externalRecipients,
+        card.entitiesAllowedToRespond,
+        card.recipient,
+        card.parentCardId,
+        card.initialParentCardUid,
+        card.publisherType,
+        card.timeSpans
+    );
 }

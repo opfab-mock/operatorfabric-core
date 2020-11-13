@@ -8,7 +8,7 @@
  */
 
 
-import {NgbDateParserFormatter, NgbDateStruct, NgbTimeStruct} from '@ng-bootstrap/ng-bootstrap';
+import {NgbDate, NgbDateStruct, NgbTimeStruct} from '@ng-bootstrap/ng-bootstrap';
 import * as moment from 'moment-timezone';
 import {Moment} from 'moment-timezone';
 
@@ -28,12 +28,28 @@ export function isNumber(value: any): value is number {
     return !isNaN(toInteger(value));
 }
 
-export class DateTimeNgb extends NgbDateParserFormatter {
+export function getDateTimeNgbFromMoment(date: moment.Moment): DateTimeNgb {
+    return new DateTimeNgb(new NgbDate(date.year(), date.month() + 1, date.date())
+        , {hour: date.hour(), minute: date.minute(), second: date.second()});
+}
+
+export function offSetCurrentTime(offset: { amount: number, unit: string }[]): DateTimeNgb {
+    const now = moment();
+    // @ts-ignore
+    offset.forEach(os => now.add(os.amount, os.unit));
+    return getDateTimeNgbFromMoment(now);
+}
+
+export class DateTimeNgb {
 
     /* istanbul ignore next */
-    constructor(readonly date?: NgbDateStruct, private time?: NgbTimeStruct) {
-        super();
+    constructor(readonly date?: NgbDateStruct, readonly time: NgbTimeStruct = {hour: 0, minute: 0, second: 0}) {
+        // in case time is explicitly set to null/undefined set to default one
+        if (!time) {
+            this.time = {hour: 0, minute: 0, second: 0};
+        }
     }
+
 
     parse(value: string): NgbDateStruct {
         if (value) {
@@ -68,9 +84,6 @@ export class DateTimeNgb extends NgbDateParserFormatter {
         const {date, time} = this;
         // if date is present
         if (date) {
-            if (!time) {
-                this.time = {hour: 0, minute: 0, second: 0};
-            }
             result = `${this.format()}T${this.formatTime()}`;
         }
         return result;
@@ -94,7 +107,7 @@ export class DateTimeNgb extends NgbDateParserFormatter {
 
     convertToDateOrNull(): Date {
         const asMoment = this.convertToMomentOrNull();
-        if (!! asMoment) {
+        if (!!asMoment) {
             return asMoment.toDate();
         }
         return null;

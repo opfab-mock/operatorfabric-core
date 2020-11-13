@@ -30,13 +30,16 @@ export class LightCard {
         readonly timeSpans?: TimeSpan[],
         readonly process?: string,
         readonly state?: string,
-        readonly parentCardUid?: string,
+        readonly parentCardId?: string,
+        readonly initialParentCardUid?: string,
+        readonly entitiesAllowedToRespond?: string[],
+        readonly publisherType?: PublisherType | string
     ) {
     }
 }
 
 export enum Severity {
-    ALARM = 'ALARM', ACTION = 'ACTION', INFORMATION = 'INFORMATION', COMPLIANT = 'COMPLIANT'
+    ALARM = 'ALARM', ACTION = 'ACTION', COMPLIANT = 'COMPLIANT', INFORMATION = 'INFORMATION'
 }
 
 export function severityOrdinal(severity: Severity) {
@@ -58,6 +61,10 @@ export function severityOrdinal(severity: Severity) {
     return result;
 }
 
+export function readOrdinal(flag: boolean) {
+    return flag ? 1 : 0;
+}
+
 export enum Sound {
     INFORMATION, COMPLIANT
 }
@@ -72,4 +79,9 @@ export class TimeSpan {
         readonly end?: number,
         readonly display = Display.BUBBLE) {
     }
+}
+
+export enum PublisherType {
+    EXTERNAL,
+    ENTITY
 }

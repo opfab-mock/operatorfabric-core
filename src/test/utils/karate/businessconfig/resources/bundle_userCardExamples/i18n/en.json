@@ -1,0 +1,17 @@
+{
+	"userCardExamples": {"label": "Examples for new cards "},
+	"message":{
+		"title":"Message",
+		"summary":"Message received"
+
+	},
+	"conference":{
+		"title":"Conference Call ☏",
+		"summary":"You are invited to a conference"
+	},
+	"question":{
+		"title":"Question ",
+		"summary":"There is a question for you"
+	}
+
+}

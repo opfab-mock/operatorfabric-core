@@ -11,6 +11,7 @@
 
 package org.lfenergy.operatorfabric.users.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.lfenergy.operatorfabric.springtools.configuration.oauth.UpdatedUserEvent;
 import org.lfenergy.operatorfabric.springtools.error.model.ApiError;
 import org.lfenergy.operatorfabric.springtools.error.model.ApiErrorException;
@@ -24,8 +25,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -66,7 +65,7 @@ public class UsersController implements UsersApi {
     private ApplicationEventPublisher publisher;
 
     @Override
-    public SimpleUser createUser(HttpServletRequest request, HttpServletResponse response, SimpleUser user) throws Exception {
+    public User createUser(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         boolean created = false;
         String login = user.getLogin();
 
@@ -78,7 +77,8 @@ public class UsersController implements UsersApi {
                             .build());
         }
 
-        if(userRepository.findById(user.getLogin()).orElse(null)==null){
+        if(userRepository.findById(user.getLogin()).orElse(null)
+                ==null){
             response.addHeader("Location", request.getContextPath() + "/users/" + user.getLogin());
             response.setStatus(201);
             created = true;
@@ -86,8 +86,9 @@ public class UsersController implements UsersApi {
         } else {
         	log.debug(String.format(USER_UPDATED, login));
         }
-        
-        userRepository.save(new UserData(user));
+
+        userService.createUser(user);
+
         if(!created)
             publisher.publishEvent(new UpdatedUserEvent(this,busServiceMatcher.getServiceId(),login));
         
@@ -140,7 +141,7 @@ public class UsersController implements UsersApi {
     }
 
     @Override
-    public SimpleUser updateUser(HttpServletRequest request, HttpServletResponse response, String login, SimpleUser user) throws Exception {
+    public User updateUser(HttpServletRequest request, HttpServletResponse response, String login, User user) throws Exception {
         //login from user body parameter should match login path parameter
         if((user.getLogin() != null) && (!user.getLogin().equals(login))){
             throw new ApiErrorException(
@@ -172,6 +173,24 @@ public class UsersController implements UsersApi {
             }
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public Void deleteUser(HttpServletRequest request, HttpServletResponse response, String login) throws Exception{
+
+        //Retrieve user from repository for login, throwing an error if login is not found
+        UserData foundUser = userRepository.findById(login).orElseThrow(()->new ApiErrorException(
+                ApiError.builder()
+                        .status(HttpStatus.NOT_FOUND)
+                        .message(String.format(USER_NOT_FOUND_MSG, login))
+                        .build()
+        ));
+
+        if (foundUser != null) {
+            publisher.publishEvent(new UpdatedUserEvent(this, busServiceMatcher.getServiceId(), foundUser.getLogin()));
+            userRepository.delete(foundUser);
+        }
+        return null;
     }
 
     private UserData findUserOrThrow(String login) {

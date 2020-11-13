@@ -1,4 +1,5 @@
 {
+  "checkPerimeterForResponseCard": true,
   "archive": {
     "filters": {
       "page": {
@@ -32,7 +33,10 @@
       "time": {
         "display": "BUSINESS"
       },
-      "hideAckFilter": false
+      "hideAckFilter": false,
+      "secondsBeforeLttdForClockDisplay": 3700,
+      "hideReadSort": false,
+      "hideSeveritySort": false
     },
     "notify": false,
     "timeline": {
@@ -88,7 +92,7 @@
     "oauth2": {
       "client-id": "opfab-client",
       "flow": {
-        "delagate-url": "http://localhost:89/auth/realms/dev/protocol/openid-connect/auth?response_type=code&client_id=opfab-client",
+        "delegate-url": "http://localhost:89/auth/realms/dev/protocol/openid-connect/auth?response_type=code&client_id=opfab-client",
         "mode": "CODE",
         "provider": "Opfab Keycloak"
       }
@@ -120,15 +124,19 @@
       }
     },
     "infos": {
-      "description": true,
-      "disable": false
+      "description": true
     },
     "locale": "en",
+    "dateTimeFormat": "HH:mm DD/MM/YYYY",
+    "dateFormat": "DD/MM/YYYY",
     "nightDayMode": false,
     "styleWhenNightDayModeDesactivated" : "NIGHT"
   },
   "navbar": {
-    "hidden": ["logging","monitoring"],
+    "hidden": ["logging","monitoring","usercard"],
     "businessmenus" : {"type":"BOTH"}
+  },
+  "admin": {
+    "hidden": false
   }
 }

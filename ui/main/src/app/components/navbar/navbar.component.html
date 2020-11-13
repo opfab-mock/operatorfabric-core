@@ -50,7 +50,7 @@
                 *ngIf="tMenu.entries.length>1"
                 translate
                 href="javascript:void(0)"
-        >{{tMenu.id}}.{{tMenu.version}}.{{tMenu.label}}</a>
+        >{{tMenu.id}}.{{tMenu.label}}</a>
         <div class="dropdown-menu "
              *ngIf="tMenu.entries.length>1"
              [ngbCollapse]="!expandedMenu[index]">
@@ -85,6 +85,15 @@
         ><of-info></of-info></a>
         <div class="dropdown-menu dropdown-menu-right"
              [ngbCollapse]="!expandedUserMenu">
+          <div class="dropdown-item" [class.active]="currentPath && 'admin' === currentPath[1]" *ngIf="(displayAdmin)">
+            <a
+                    class="nav-link opfab-menu-link text-decoration-none"
+                    routerLink="/admin"
+                    routerLinkActive #rla="routerLinkActive"
+                    translate
+            >menu.admin</a>
+          </div>
+
           <div class="dropdown-item" [class.active]="currentPath && 'settings' === currentPath[1]">
             <a
                     class="nav-link opfab-menu-link text-decoration-none"

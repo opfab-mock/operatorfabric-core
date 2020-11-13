@@ -11,14 +11,23 @@
 package org.lfenergy.operatorfabric.cards.publication.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.lfenergy.operatorfabric.aop.process.AopTraceType;
+import org.lfenergy.operatorfabric.aop.process.mongo.models.UserActionTraceData;
 import org.lfenergy.operatorfabric.cards.model.CardOperationTypeEnum;
 import org.lfenergy.operatorfabric.cards.publication.model.ArchivedCardPublicationData;
 import org.lfenergy.operatorfabric.cards.publication.model.CardCreationReportData;
 import org.lfenergy.operatorfabric.cards.publication.model.CardPublicationData;
+import org.lfenergy.operatorfabric.cards.publication.model.PublisherTypeEnum;
 import org.lfenergy.operatorfabric.cards.publication.services.clients.impl.ExternalAppClientImpl;
 import org.lfenergy.operatorfabric.cards.publication.services.processors.UserCardProcessor;
+import org.lfenergy.operatorfabric.springtools.error.model.ApiError;
+import org.lfenergy.operatorfabric.springtools.error.model.ApiErrorException;
+import org.lfenergy.operatorfabric.users.model.ComputedPerimeter;
 import org.lfenergy.operatorfabric.users.model.CurrentUserWithPerimeters;
+import org.lfenergy.operatorfabric.users.model.RightsEnum;
+import org.lfenergy.operatorfabric.users.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import reactor.core.publisher.Flux;
@@ -54,6 +63,8 @@ public class CardProcessingService {
     private UserCardProcessor userCardProcessor;
     @Autowired
     private ExternalAppClientImpl externalAppClient;
+    @Autowired
+    private TraceReposiory traceReposiory;
 
     private Mono<CardCreationReportData> processCards(Flux<CardPublicationData> pushedCards, Optional<CurrentUserWithPerimeters> user) {
 
@@ -80,11 +91,14 @@ public class CardProcessingService {
     }
 
     private Flux<CardPublicationData> deleteChildCardsProcess(Flux<CardPublicationData> cards) {
-        return cards.doOnNext(card->{
-            String idCard= card.getProcess()+"."+card.getProcessInstanceId();
-            Optional<List<CardPublicationData>> childCard=cardRepositoryService.findChildCard(cardRepositoryService.findCardById(idCard));
-            if(childCard.isPresent()){
-                deleteCards(childCard.get());
+        return cards.doOnNext(card -> {
+
+            if (! card.getKeepChildCards()) {
+                String idCard = card.getProcess() + "." + card.getProcessInstanceId();
+                Optional<List<CardPublicationData>> childCard = cardRepositoryService.findChildCard(cardRepositoryService.findCardById(idCard));
+                if (childCard.isPresent()) {
+                    deleteCards(childCard.get());
+                }
             }
         });
     }
@@ -146,9 +160,13 @@ public class CardProcessingService {
      */
     void validate(CardPublicationData c) throws ConstraintViolationException {
 
-        // constraint check : parentCardUid must exist
-        if (!checkIsParentCardUidExisting(c))
-            throw new ConstraintViolationException("The parentCardUid " + c.getParentCardUid() + " is not the uid of any card", null);
+        // constraint check : parentCardId must exist
+        if (!checkIsParentCardIdExisting(c))
+            throw new ConstraintViolationException("The parentCardId " + c.getParentCardId() + " is not the id of any card", null);
+
+        // constraint check : initialParentCardUid must exist
+        if (!checkIsInitialParentCardUidExisting(c))
+            throw new ConstraintViolationException("The initialParentCardUid " + c.getInitialParentCardUid() + " is not the uid of any card", null);
 
         Set<ConstraintViolation<CardPublicationData>> results = localValidatorFactoryBean.validate(c);
         if (!results.isEmpty())
@@ -167,14 +185,18 @@ public class CardProcessingService {
             throw new ConstraintViolationException("constraint violation : character '.' is forbidden in process and state", null);
     }
 
-    boolean checkIsParentCardUidExisting(CardPublicationData c){
-        String parentCardUid = c.getParentCardUid();
-        if (Optional.ofNullable(parentCardUid).isPresent()) {
-            if (!cardRepositoryService.findByUid(parentCardUid).isPresent()) {
-                return false;
-            }
-        }
-        return true;
+    boolean checkIsParentCardIdExisting(CardPublicationData c){
+        String parentCardId = c.getParentCardId();
+
+        return ! ((Optional.ofNullable(parentCardId).isPresent()) && (cardRepositoryService.findCardById(parentCardId) == null));
+    }
+
+    //The check of existence of uid is done in archivedCards collection
+    boolean checkIsInitialParentCardUidExisting(CardPublicationData c){
+        String initialParentCardUid = c.getInitialParentCardUid();
+
+        return ! ((Optional.ofNullable(initialParentCardUid).isPresent()) &&
+                  (! cardRepositoryService.findArchivedCardByUid(initialParentCardUid).isPresent()));
     }
 
     boolean checkIsEndDateAfterStartDate(CardPublicationData c) {
@@ -209,7 +231,7 @@ public class CardProcessingService {
      * @param windowStart
      * @return
      */
-    private Mono<Integer> registerPersistenceAndNotificationProcess(Flux<CardPublicationData> cards, long windowStart) {
+    private Mono<Integer>  registerPersistenceAndNotificationProcess(Flux<CardPublicationData> cards, long windowStart) {
 
         return cards.doOnNext(card -> {
             cardRepositoryService.saveCard(card);
@@ -226,9 +248,28 @@ public class CardProcessingService {
         cardPublicationData.forEach(x->deleteCard(x.getId()));
     }
 
-    public void deleteCard(String processInstanceId) {
+    public Optional<CardPublicationData> deleteCard(String id) {
+        CardPublicationData cardToDelete = cardRepositoryService.findCardById(id);
+        return deleteCard0(cardToDelete);
+    }
 
-        CardPublicationData cardToDelete = cardRepositoryService.findCardById(processInstanceId);
+    public Optional<CardPublicationData> deleteUserCard(String id, CurrentUserWithPerimeters user) {
+        CardPublicationData cardToDelete = cardRepositoryService.findCardById(id);
+        if (cardToDelete == null)
+            return Optional.empty();
+        if (isUserAllowedToDeleteThisCard(cardToDelete, user)){
+            return deleteCard0(cardToDelete);
+        }
+        else {
+            throw new ApiErrorException(ApiError.builder()
+                    .status(HttpStatus.FORBIDDEN)
+                    .message("User not allowed to delete this card")
+                    .build());
+        }
+    }
+
+    public Optional<CardPublicationData> deleteCard0(CardPublicationData cardToDelete) {
+        Optional<CardPublicationData> deletedCard = Optional.ofNullable(cardToDelete);
         if (null != cardToDelete) {
             cardNotificationService.notifyOneCard(cardToDelete, CardOperationTypeEnum.DELETE);
             cardRepositoryService.deleteCard(cardToDelete);
@@ -236,18 +277,42 @@ public class CardProcessingService {
             if(childCard.isPresent()){
                 childCard.get().forEach(x->deleteCard(x.getId()));
             }
-
         }
+        return deletedCard;
     }
 
-	public Mono<UserBasedOperationResult> processUserAcknowledgement(Mono<String> cardUid, String userName) {
-		return cardUid.map(_cardUid -> cardRepositoryService.addUserAck(userName, _cardUid));
+    /* 1st check : card.publisherType == ENTITY
+       2nd check : the card has been sent by an entity of the user connected
+       3rd check : the user has the Write access to the process/state of the card */
+    public boolean isUserAllowedToDeleteThisCard(CardPublicationData card, CurrentUserWithPerimeters user) {
+        List<ComputedPerimeter> perimetersOfTheUserList = user.getComputedPerimeters();
+        List<String>            entitiesOfTheUserList   = user.getUserData().getEntities();
+
+        if ((card.getPublisherType() == PublisherTypeEnum.ENTITY) &&
+            (entitiesOfTheUserList.contains(card.getPublisher()))){
+
+            for (ComputedPerimeter perimeter : perimetersOfTheUserList) {
+                if ((perimeter.getProcess().equals(card.getProcess())) &&
+                    (perimeter.getState().equals(card.getState())) &&
+                    ((perimeter.getRights() == RightsEnum.WRITE) || (perimeter.getRights() == RightsEnum.RECEIVEANDWRITE)))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+	public Mono<UserBasedOperationResult> processUserAcknowledgement(Mono<String> cardUid, User user) {
+		return cardUid.map(uid -> cardRepositoryService.addUserAck(user, uid));
 	}
-	
+
 	public Mono<UserBasedOperationResult> processUserRead(Mono<String> cardUid, String userName) {
-		return cardUid.map(_cardUid -> cardRepositoryService.addUserRead(userName, _cardUid));
+		return cardUid.map(uid -> cardRepositoryService.addUserRead(userName, uid));
+    }
+
+    public Mono<UserBasedOperationResult> deleteUserRead(Mono<String> cardUid, String userName) {
+		return cardUid.map(_cardUid -> cardRepositoryService.deleteUserRead(userName, _cardUid));
 	}
-        
+
     /**
      * Logs card count and elapsed time since window start
      *
@@ -265,7 +330,9 @@ public class CardProcessingService {
 		return cardUid.map(_cardUid -> cardRepositoryService.deleteUserAck(userName, _cardUid));
 	}
 
-	
+    public Mono<UserActionTraceData> findTraceByCardUid(String name, String cardUid) {
+        return traceReposiory.findByCardUidAndActionAndUserName(cardUid, AopTraceType.ACK.getAction(),name);
+    }
 
 	
 }

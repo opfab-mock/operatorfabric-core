@@ -41,7 +41,9 @@ public class ArchivedCardPublicationData implements Card {
     private String uid;
     @Id
     private String id;
-    private String parentCardUid;
+    private String parentCardId;
+    private String initialParentCardUid;
+    private Boolean keepChildCards = false;
     private String publisher;
     private String processVersion;
     private String process;
@@ -52,8 +54,6 @@ public class ArchivedCardPublicationData implements Card {
     private I18n summary;
     @CreatedDate
     private Instant publishDate;
-    @Transient
-    private Instant deletionDate;
     private Instant lttd;
     
     @Indexed
@@ -84,9 +84,13 @@ public class ArchivedCardPublicationData implements Card {
     @Indexed
     private String processStateKey;
 
+    private PublisherTypeEnum publisherType;
+
     public ArchivedCardPublicationData(CardPublicationData card){
         this.id = card.getUid();
-        this.parentCardUid = card.getParentCardUid();
+        this.parentCardId = card.getParentCardId();
+        this.initialParentCardUid = card.getInitialParentCardUid();
+        this.keepChildCards = card.getKeepChildCards();
         this.publisher = card.getPublisher();
         this.processVersion = card.getProcessVersion();
         this.publishDate = card.getPublishDate();
@@ -110,6 +114,7 @@ public class ArchivedCardPublicationData implements Card {
         this.externalRecipients = card.getExternalRecipients() == null ? null : new ArrayList<>(card.getExternalRecipients());
         this.entitiesAllowedToRespond = card.getEntitiesAllowedToRespond() == null ? null : new ArrayList<>(card.getEntitiesAllowedToRespond());
         this.processStateKey = process + "." + state;
+        this.publisherType = card.getPublisherType();
     }
 
 }

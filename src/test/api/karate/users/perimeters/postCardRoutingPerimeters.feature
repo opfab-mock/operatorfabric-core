@@ -1,10 +1,10 @@
 Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 
   Background:
-   #Getting token for admin and tso1-operator user calling getToken.feature
+   #Getting token for admin and operator1 user calling getToken.feature
     * def signIn = call read('../../common/getToken.feature') { username: 'admin'}
     * def authToken = signIn.authToken
-    * def signInAsTSO = call read('../../common/getToken.feature') { username: 'tso1-operator'}
+    * def signInAsTSO = call read('../../common/getToken.feature') { username: 'operator1'}
     * def authTokenAsTSO = signInAsTSO.authToken
       #defining perimeters
     * def perimeter =
@@ -25,10 +25,10 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 }
 """
 
-    * def groupTSO1List =
+    * def groupDispatcherList =
 """
 [
-"TSO1"
+"Dispatcher"
 ]
 """
 
@@ -41,10 +41,7 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 	"process"  :"api_test",
 	"processInstanceId" : "cardForGroup",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "INFORMATION",
 	"startDate" : 1553186770681,
 	"summary" : {"key" : "defaultProcess.summary"},
@@ -63,9 +60,6 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 	"process"  :"api_test",
 	"processInstanceId" : "cardForEntityWithoutPerimeter",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "USER"
-			},
 	"severity" : "INFORMATION",
 	"startDate" : 1553186770681,
 	"summary" : {"key" : "defaultProcess.summary"},
@@ -85,9 +79,6 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 	"process"  :"process1",
 	"processInstanceId" : "cardForEntityAndPerimeter",
 	"state": "state1",
-	"recipient" : {
-				"type" : "USER"
-			},
 	"severity" : "INFORMATION",
 	"startDate" : 1553186770681,
 	"summary" : {"key" : "defaultProcess.summary"},
@@ -107,10 +98,7 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 	"process"  :"api_test",
 	"processInstanceId" : "cardForEntityAndGroup",
 	"state": "defaultState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "INFORMATION",
 	"startDate" : 1553186770681,
 	"summary" : {"key" : "defaultProcess.summary"},
@@ -130,10 +118,7 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
 	"process"  :"process1",
 	"processInstanceId" : "cardForEntityAndOtherGroupAndPerimeter",
 	"state": "state1",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO2"
-			},
+	"groupRecipients": ["Planner"],
 	"severity" : "INFORMATION",
 	"startDate" : 1553186770681,
 	"summary" : {"key" : "defaultProcess.summary"},
@@ -155,10 +140,10 @@ Feature: CreatePerimeters (endpoint tested : POST /perimeters)
     And match response.stateRights == perimeter.stateRights
 
 
-  Scenario: Put perimeter for TSO1 group
+  Scenario: Put perimeter for Dispatcher group
     Given url opfabUrl + 'users/perimeters/'+ perimeter.id + '/groups'
     And header Authorization = 'Bearer ' + authToken
-    And request groupTSO1List
+    And request groupDispatcherList
     When method put
     Then status 200
 

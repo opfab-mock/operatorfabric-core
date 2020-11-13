@@ -14,7 +14,7 @@ package org.lfenergy.operatorfabric.users.controllers;
 import lombok.extern.slf4j.Slf4j;
 import org.lfenergy.operatorfabric.users.configuration.oauth2.UserExtractor;
 import org.lfenergy.operatorfabric.users.model.*;
-import org.lfenergy.operatorfabric.users.services.UserService;
+import org.lfenergy.operatorfabric.users.services.UserServiceImp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +33,7 @@ import java.util.*;
 public class CurrentUserWithPerimetersController implements CurrentUserWithPerimetersApi, UserExtractor {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImp userService;
 
     @Override
     public CurrentUserWithPerimeters fetchCurrentUserWithPerimeters(HttpServletRequest request, HttpServletResponse response) throws Exception{
@@ -43,6 +43,10 @@ public class CurrentUserWithPerimetersController implements CurrentUserWithPerim
         if (userData != null) {
             List<String> groups = userData.getGroups(); //First, we recover the groups to which the user belongs
             currentUserWithPerimetersData.setUserData(userData);
+
+            //We recover the user_settings to have the process/state filters defined by the user, for his feed
+            currentUserWithPerimetersData.setProcessesStatesNotNotified(
+                    userService.retrieveUserSettings(userData.getLogin()).getProcessesStatesNotNotified());
 
             if ((groups != null) && (!groups.isEmpty())) {     //Then, we recover the groups data
                 List<GroupData> groupsData = userService.retrieveGroups(groups);

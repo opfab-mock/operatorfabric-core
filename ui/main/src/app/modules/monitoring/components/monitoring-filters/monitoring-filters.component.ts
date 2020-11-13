@@ -7,141 +7,146 @@
  * This file is part of the OperatorFabric project.
  */
 
-import {Component, Input, OnDestroy, OnInit} from '@angular/core';
-import {Observable, Subject} from 'rxjs';
+import {AfterViewInit, Component, Input,OnInit} from '@angular/core';
 import {AbstractControl, FormControl, FormGroup} from '@angular/forms';
 import {Store} from '@ngrx/store';
 import {AppState} from '@ofStore/index';
-import * as moment from 'moment';
-import {NgbDateStruct, NgbTimeStruct} from '@ng-bootstrap/ng-bootstrap';
 import {FilterType} from '@ofServices/filter.service';
 import {ApplyFilter, ResetFilter} from '@ofActions/feed.actions';
-import {DateTimeNgb} from '@ofModel/datetime-ngb.model';
+import {DateTimeNgb, offSetCurrentTime} from '@ofModel/datetime-ngb.model';
 import {ConfigService} from '@ofServices/config.service';
+import moment from 'moment';
+
 
 @Component({
     selector: 'of-monitoring-filters',
-    templateUrl: './monitoring-filters.component.html',
-    styleUrls: ['./monitoring-filters.component.scss']
+    templateUrl: './monitoring-filters.component.html'
 })
-export class MonitoringFiltersComponent implements OnInit, OnDestroy {
+export class MonitoringFiltersComponent implements OnInit, AfterViewInit {
 
-    processes$: Observable<string[]>;
-    tempProcesses: string[];
     size = 10;
     monitoringForm: FormGroup;
-    unsubscribe$: Subject<void> = new Subject<void>();
-    startDate: NgbDateStruct;
-    startTime: NgbTimeStruct;
-    endDate: NgbDateStruct;
-    endTime: NgbTimeStruct;
+
+    dropdownList = [];
+    selectedItems = [];
+    dropdownSettings = {};
+    firstQuery: boolean = true;
 
     @Input()
-    public processData: Observable<any>;
+    public processData: [];
 
     public submittedOnce = false;
 
     constructor(private store: Store<AppState>, private configService: ConfigService) {
+
+    }
+
+    ngOnInit() {
+        this.size = this.configService.getConfigValue('archive.filters.page.size', 10);
+
         this.monitoringForm = new FormGroup(
             {
-                process: new FormControl(''),
+                process: new FormControl([]),
                 publishDateFrom: new FormControl(''),
                 publishDateTo: new FormControl(''),
                 activeFrom: new FormControl(''),
                 activeTo: new FormControl('')
             }
         );
+        this.initActiveDatesForm();
 
+        this.dropdownList = this.processData;
+
+        this.dropdownSettings = {
+            text: 'Select a Process',
+            selectAllText: 'Select All',
+            unSelectAllText: 'UnSelect All',
+            enableSearchFilter: true,
+            classes: 'custom-class-example'
+        };
     }
 
-    ngOnInit() {
-        this.tempProcesses = ['APOGEE', 'test_action', 'TEST', 'first', 'api_test'];
+    ngAfterViewInit() {
+        this.sendQuery();
+    }
 
-        this.size = this.configService.getConfigValue('archive.filters.page.size', 10);
-
-        const now = moment();
-        const start = now.add(-2, 'hour');
-        this.startDate = {
-            year: start.year()
-            , month: start.month() + 1 // moment month begins with 0 index
-            , day: start.date() // moment day give day in the week
-        } as NgbDateStruct;
-        this.startTime = {hour: start.hour(), minute: start.minute(), second: start.second()};
-
-        const end = now.add(2, 'day');
-        this.endDate = {
-            year: end.year()
-            , month: end.month() + 1 // moment month begins with 0 index
-            , day: end.date() // moment day give day in the week
-        } as NgbDateStruct;
-        this.endTime = {hour: end.hour(), minute: end.minute(), second: end.second()};
-
-
+    initActiveDatesForm() {
+        const start = moment();
+        start.add(-2, 'hours');
+        const end = moment();
+        end.add(+2, 'days');
+        this.monitoringForm.controls.activeFrom.patchValue({'date': {'year': start.year(), 'month': start.month() + 1, 'day': start.date()}, 'time': {'hour': start.hour(), 'minute': start.minute()}});
+        this.monitoringForm.controls.activeTo.patchValue({'date': {'year': end.year(), 'month': end.month() + 1, 'day': end.date()}, 'time': {'hour': end.hour(), 'minute': end.minute()}});
+        this.monitoringForm.controls.activeFrom.updateValueAndValidity({onlySelf: false, emitEvent: true});
+        this.monitoringForm.controls.activeTo.updateValueAndValidity({onlySelf: false, emitEvent: true});
     }
 
     sendQuery() {
-        this.otherWayToCreateFilters();
-    }
-
-    otherWayToCreateFilters() {
-        this.store.dispatch(new ResetFilter());
-
-        const testProc = this.monitoringForm.get('process');
-        if (this.hasFormControlValueChanged(testProc)) {
-            const procFilter = {
-                name: FilterType.PROCESS_FILTER
-                , active: true
-                , status: {processes: testProc.value}
-            };
-            this.store.dispatch(new ApplyFilter(procFilter));
-        }
+        const selectedProcesses = this.monitoringForm.get('process');
         const pubStart = this.monitoringForm.get('publishDateFrom');
         const pubEnd = this.monitoringForm.get('publishDateTo');
-        if (this.hasFormControlValueChanged(pubStart)
-            || this.hasFormControlValueChanged(pubEnd)) {
-
-            const start = this.extractDateOrDefaultOne(pubStart, {
-                date: this.startDate
-                , time: this.startTime
-            });
-            const end = this.extractDateOrDefaultOne(pubEnd, {
-                date: this.endDate
-                , time: this.endTime
-            });
-            const publishDateFilter = {
-                name: FilterType.PUBLISHDATE_FILTER
-                , active: true
-                , status: {
-                    start: start,
-                    end: end
-                }
-            };
-            this.store.dispatch(new ApplyFilter(publishDateFilter));
-        }
         const busiStart = this.monitoringForm.get('activeFrom');
         const busiEnd = this.monitoringForm.get('activeTo');
-        if (this.hasFormControlValueChanged(busiStart)
-            || this.hasFormControlValueChanged(busiEnd)) {
-            const end = this.extractDateOrDefaultOne(busiEnd, {
-                date: this.endDate
-                , time: this.endTime
-            });
-            const start = this.extractDateOrDefaultOne(busiStart, {
-                date: this.startDate
-                , time: this.startTime
-            });
-            const businessDateFilter = {
-                name: FilterType.BUSINESSDATE_FILTER
-                , active: true
-                , status: {
-                    start: start,
-                    end: end
-                }
-            };
-            this.store.dispatch(new ApplyFilter(businessDateFilter));
-        }
 
+        if (this.firstQuery || this.hasFormControlValueChanged(selectedProcesses) 
+            || this.hasFormControlValueChanged(pubStart) || this.hasFormControlValueChanged(pubEnd) 
+            || this.hasFormControlValueChanged(busiStart) || this.hasFormControlValueChanged(busiEnd)) {
+            this.store.dispatch(new ResetFilter());
+            
+            if (selectedProcesses.value) {
+                const processesId = Array.prototype.map.call(selectedProcesses.value, item => item.id);
+                const procFilter = {
+                    name: FilterType.PROCESS_FILTER
+                    , active: true
+                    , status: {processes: processesId}
+                };
+                this.store.dispatch(new ApplyFilter(procFilter));
+            }
+            
+            if (this.hasFormControlValueChanged(pubStart)
+                || this.hasFormControlValueChanged(pubEnd)) {
+
+                const start = this.extractDateOrDefaultOne(pubStart,  offSetCurrentTime([{amount: -2, unit: 'hours'}]));
+                const end = this.extractDateOrDefaultOne(pubEnd, offSetCurrentTime([{amount: 2, unit: 'days'}]));
+                const publishDateFilter = {
+                    name: FilterType.PUBLISHDATE_FILTER
+                    , active: true
+                    , status: {
+                        start: start,
+                        end: end
+                    }
+                };
+                this.store.dispatch(new ApplyFilter(publishDateFilter));
+            }
+            
+            const bstart = this.extractDateOrDefaultOne(busiStart,  offSetCurrentTime([{amount: -2, unit: 'hours'}]));
+            const bend = this.extractDateOrDefaultOne(busiEnd, offSetCurrentTime([{amount: 2, unit: 'days'}]));
+            const businessDateFilter = (bend >= 0) ? {
+                    name: FilterType.MONITOR_DATE_FILTER
+                    , active: true
+                    , status: {
+                        start: bstart,
+                        end: bend
+                    }
+                } : {
+                    name: FilterType.MONITOR_DATE_FILTER
+                    , active: true
+                    , status: {
+                        start: bstart
+                    }
+                };
+                
+                this.store.dispatch(new ApplyFilter({
+                    name: FilterType.BUSINESSDATE_FILTER, active: true,
+                    status: {start: bstart, end: bend}
+                    }));
+                
+                this.store.dispatch(new ApplyFilter(businessDateFilter));
+        }
+        this.firstQuery = false;
     }
+
+
 
     hasFormControlValueChanged(control: AbstractControl): boolean {
         if (!!control) {
@@ -156,18 +161,21 @@ export class MonitoringFiltersComponent implements OnInit, OnDestroy {
     extractDateOrDefaultOne(form: AbstractControl, defaultDate: any) {
         const val = form.value;
         const finallyUsedDate = (!!val && val !== '') ? val : defaultDate;
+        if (!finallyUsedDate) {
+            return -1;
+        }
         const converter = new DateTimeNgb(finallyUsedDate.date, finallyUsedDate.time);
         return converter.convertToNumber();
     }
 
     resetForm() {
         this.monitoringForm.reset();
-        this.store.dispatch(new ResetFilter());
+        this.initActiveDatesForm();
+        this.firstQuery = true;
+        this.sendQuery();
     }
 
     ngOnDestroy() {
-        this.unsubscribe$.next();
-        this.unsubscribe$.complete();
         this.store.dispatch(new ResetFilter());
     }
 

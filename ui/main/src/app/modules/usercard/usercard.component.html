@@ -1,0 +1,115 @@
+<!-- Copyright (c) 2020, RTE (http://www.rte-france.com)              -->
+<!-- See AUTHORS.txt                                                       -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public   -->
+<!-- License, v. 2.0. If a copy of the MPL was not distributed with this   -->
+<!-- file, You can obtain one at http://mozilla.org/MPL/2.0/.              -->
+<!-- SPDX-License-Identifier: MPL-2.0                                      -->
+<!-- This file is part of the OperatorFabric project.                      -->
+
+<h2 *ngIf="!editCardMode" translate style="text-align: center;">userCard.title</h2>
+<h2 *ngIf="editCardMode" translate style="text-align: center;">userCard.editTitle</h2>
+
+<br />
+<div *ngIf="displayForm()" class="container">
+    <form [formGroup]="messageForm">
+        <div class="row">
+
+            <div class="col">
+                <of-single-filter i18nRootLabelKey="userCard.filters." [parentForm]="messageForm" filterPath="process"
+                    [values]="processOptions"></of-single-filter>
+            </div>
+            <div class="col">
+                <of-single-filter i18nRootLabelKey="userCard.filters." [parentForm]="messageForm" filterPath="state"
+                    [values]="stateOptions"></of-single-filter>
+
+            </div>
+            <div class="col">
+                <of-single-filter i18nRootLabelKey="userCard.filters." [parentForm]="messageForm" filterPath="severity"
+                    [values]="severityOptions"></of-single-filter>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <of-datetime-filter filterPath="startDate" formControlName="startDate" labelKey="userCard.filters."
+                    [offset]="[{amount:1,unit:'minute'}]"></of-datetime-filter>
+            </div>
+            <div class="col">
+                <of-datetime-filter filterPath="endDate" formControlName="endDate" labelKey="userCard.filters."
+                    [offset]="[{amount:60,unit:'minute'}]"></of-datetime-filter>
+            </div>
+        </div>
+
+
+
+    </form>
+
+    <div [innerHtml]="userCardTemplate"></div>
+
+    <br/>   
+
+
+    <form [formGroup]="recipientForm">
+        <div class="row">
+            <div class="col-12">
+
+                <of-multi-filter-2 filterPath="recipients" id="recipients" [parentForm]="recipientForm"
+                    [values]="recipientsOptions" [dropdownSettings]="dropdownSettings" i18nRootLabelKey="userCard.filters." [selectedItems]="selectedRecipients" >
+                </of-multi-filter-2>
+            </div>
+
+        </div>
+    </form>
+
+    <br />
+    <div style="text-align: center;width:100%">
+        <button type="button" class="btn btn-primary" (click)="onSubmitForm(resumeCardBeforeSend)" translate>
+            userCard.prepareCard
+
+        </button>
+    </div>
+</div>
+
+<div *ngIf="displaySendResult">
+    <br />
+    <h2 translate style="text-align: center"> {{messageAfterSendingCard}} </h2>
+    <br /><br />
+    <of-card [lightCard]="card" [open]="true" [displayUnreadIcon]="false"></of-card>
+    <br />
+    <div style="text-align: center;">
+        <button type="button" class="btn btn-primary" (click)="sendAnotherUserCard()"
+            translate>userCard.send-another-one</button>
+    </div>
+</div>
+
+<br />
+<div id='div-detail-msg' *ngIf='errorMessage.display' class="alert alert-dismissible fade show text-center alert-danger"
+    role="alert" translate>
+    {{errorMessage.text}}
+    <button type="button" class="close" aria-label="Close" (click)="errorMessage.display = false">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
+<ng-template #resumeCardBeforeSend let-modal>
+    <div class="modal-header">
+        <h4 translate> userCard.confirmSending </h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+
+        <div>
+
+
+            <of-card [lightCard]="card" [open]="true" [displayUnreadIcon]="false"></of-card>
+
+            <of-card-preview [card]="card" [currentPath]="'test'"> </of-card-preview>
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="decline()" translate>userCard.refuse</button>
+            <button type="button" class="btn btn-outline-dark" (click)="confirm()" translate>userCard.accept</button>
+        </div>
+    </div>
+</ng-template>

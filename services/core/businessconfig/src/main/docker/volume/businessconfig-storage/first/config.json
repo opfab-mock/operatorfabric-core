@@ -1,15 +1,29 @@
 {
   "id": "first",
   "version": "v1",
-  "templates": [
-    "template1"
-  ],
-  "csses": [
-    "style1",
-    "style2"
-  ],
+  "uiVisibility": {
+    "monitoring": true,
+    "logging": true,
+    "calendar": true
+  },
+  "name":"process.label",
   "locales": [
     "fr",
     "en"
-  ]
+  ],
+  "states": {
+    "firstState": {
+      "name":  "firstState.label",
+      "color": "blue",
+      "details": [
+        {
+          "title": {
+            "key": "template1.title"
+          },
+          "templateName": "template1"
+        }
+      ],
+      "acknowledgementAllowed": false
+    }
+  }
 }

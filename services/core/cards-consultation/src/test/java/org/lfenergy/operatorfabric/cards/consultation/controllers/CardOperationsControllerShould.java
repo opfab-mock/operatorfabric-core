@@ -74,9 +74,7 @@ public class CardOperationsControllerShould {
     @Autowired
     private RabbitTemplate rabbitTemplate;
     @Autowired
-    private FanoutExchange groupExchange;
-    @Autowired
-    private DirectExchange userExchange;
+    private FanoutExchange cardExchange;
     @Autowired
     private CardOperationsController controller;
     @Autowired
@@ -107,7 +105,7 @@ public class CardOperationsControllerShould {
         currentUserWithPerimeters.setUserData(user);
         
         user = new User();
-        user.setLogin("rte-operator");
+        user.setLogin("operator3");
         user.setFirstName("Test2");
         user.setLastName("User2");
         groups = new ArrayList<>();
@@ -133,67 +131,67 @@ public class CardOperationsControllerShould {
         StepVerifier.create(repository.deleteAll()).expectComplete().verify();
         int processNo = 0;
         //create past cards
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusTwo, nowMinusOne, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"}, new String[]{"rte-operator","some-operator"}, new String[]{"rte-operator","some-operator"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusTwo, nowMinusOne, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"}, new String[]{"operator3","some-operator"}, new String[]{"operator3","some-operator"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusTwo, nowMinusOne, "rte-operator", new String[]{"rte","operator"}, null)))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusTwo, nowMinusOne, "operator3", new String[]{"rte","operator"}, null)))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusOne, now, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"}, new String[]{"any-operator","some-operator"}, new String[]{"any-operator","some-operator"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusOne, now, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"}, new String[]{"any-operator","some-operator"}, new String[]{"any-operator","some-operator"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
         //create future cards
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, now, nowPlusOne, "rte-operator", new String[]{"rte","operator"}, null)))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, now, nowPlusOne, "operator3", new String[]{"rte","operator"}, null)))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowPlusOne, nowPlusTwo, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowPlusOne, nowPlusTwo, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowPlusTwo, nowPlusThree, "rte-operator", new String[]{"rte","operator"}, null)))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowPlusTwo, nowPlusThree, "operator3", new String[]{"rte","operator"}, null)))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
 
         //card starts in past and ends in future
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusThree, nowPlusThree, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusThree, nowPlusThree, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
 
         //card starts in past and never ends
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusThree, null, "rte-operator", new String[]{"rte","operator"}, null)))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowMinusThree, null, "operator3", new String[]{"rte","operator"}, null)))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
 
         //card starts in future and never ends
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowPlusThree, null, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowMinusThree, nowPlusThree, null, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
 
         //create later published cards in past
         //this one overrides first
-        StepVerifier.create(repository.save(createSimpleCard(1, nowPlusOne, nowMinusTwo, nowMinusOne, "rte-operator", new String[]{"rte","operator"}, null)))
+        StepVerifier.create(repository.save(createSimpleCard(1, nowPlusOne, nowMinusTwo, nowMinusOne, "operator3", new String[]{"rte","operator"}, null)))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowPlusOne, nowMinusTwo, nowMinusOne, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowPlusOne, nowMinusTwo, nowMinusOne, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
         //create later published cards in future
         // this one overrides businessconfig
-        StepVerifier.create(repository.save(createSimpleCard(3, nowPlusOne, nowPlusOne, nowPlusTwo, "rte-operator", new String[]{"rte","operator"}, null)))
+        StepVerifier.create(repository.save(createSimpleCard(3, nowPlusOne, nowPlusOne, nowPlusTwo, "operator3", new String[]{"rte","operator"}, null)))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
-        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowPlusOne, nowPlusTwo, nowPlusThree, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
+        StepVerifier.create(repository.save(createSimpleCard(processNo++, nowPlusOne, nowPlusTwo, nowPlusThree, "operator3", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
                 .expectNextCount(1)
                 .expectComplete()
                 .verify();
@@ -220,7 +218,7 @@ public class CardOperationsControllerShould {
                 })
                 .assertNext(op->{
                         assertThat(op.getCards().size()).isEqualTo(1);
-                        assertThat(op.getPublishDate()).isEqualTo(nowMinusThree);
+                        assertThat(op.getPublishDate()).isEqualTo(nowPlusOne);
                         cardIds.add(op.getCards().get(0).getId());
                 })
                 .assertNext(op->{
@@ -241,6 +239,16 @@ public class CardOperationsControllerShould {
                 .assertNext(op->{
                         assertThat(op.getCards().size()).isEqualTo(1);
                         assertThat(op.getPublishDate()).isEqualTo(nowMinusThree);
+                        cardIds.add(op.getCards().get(0).getId());
+                })
+                .assertNext(op->{
+                        assertThat(op.getCards().size()).isEqualTo(1);
+                        assertThat(op.getPublishDate()).isEqualTo(nowMinusThree);
+                        cardIds.add(op.getCards().get(0).getId());
+                })
+                .assertNext(op->{
+                        assertThat(op.getCards().size()).isEqualTo(1);
+                        assertThat(op.getPublishDate()).isEqualTo(nowPlusOne);
                         cardIds.add(op.getCards().get(0).getId());
                 })
                 .expectComplete()
@@ -271,20 +279,6 @@ public class CardOperationsControllerShould {
         };
     }
 
-    @Test
-    public void receiveFaultyCards() {
-        Flux<String> publisher = controller.registerSubscriptionAndPublish(Mono.just(
-                CardOperationsGetParameters.builder()
-                        .currentUserWithPerimeters(currentUserWithPerimeters)
-                        .test(false)
-                        .notification(true).build()
-        ));
-        StepVerifier.FirstStep<String> verifier = StepVerifier.create(publisher);
-        taskScheduler.schedule(createSendMessageTask(), new Date(System.currentTimeMillis() + 2000));
-        verifier
-           .expectNext("{\"status\":\"BAD_REQUEST\",\"message\":\"\\\"clientId\\\" is a mandatory request parameter\"}")
-           .verifyComplete();
-    }
 
     @Test
     public void receiveCardsCheckUserAcks() {
@@ -335,22 +329,6 @@ public class CardOperationsControllerShould {
         assertThat(list.get(2).getCards().get(0).getHasBeenRead()).isFalse();       
     }
 
-    private Runnable createSendMessageTask() {
-        return () -> {
-            try {
-                log.info("execute send task");
-                CardOperationConsultationData.CardOperationConsultationDataBuilder builder = CardOperationConsultationData.builder();
-                builder.publishDate(nowPlusOne)
-                        .card(LightCardConsultationData.copy(TestUtilities.createSimpleCard("notif1", nowPlusOne, nowPlusTwo, nowPlusThree, "rte-operator", new String[]{"rte","operator"}, null)))
-                        .card(LightCardConsultationData.copy(TestUtilities.createSimpleCard("notif2", nowPlusOne, nowPlusTwo, nowPlusThree, "rte-operator", new String[]{"rte","operator"}, new String[]{"entity1","entity2"})))
-                ;
-
-                rabbitTemplate.convertAndSend(userExchange.getName(), currentUserWithPerimeters.getUserData().getLogin(),
-                                              mapper.writeValueAsString(builder.build()));
-            } catch (JsonProcessingException e) {
-                log.error("Error during test data generation",e);
-            }
-        };
-    }
+ 
 
 }

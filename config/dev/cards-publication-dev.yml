@@ -3,6 +3,23 @@ server:
 spring:
   application:
     name: cards-publication
+  deserializer:
+    value:
+      delegate:
+        class: io.confluent.kafka.serializers.KafkaAvroDeserializer
+  # uncomment to enable Kafka
+#  kafka:
+#    consumer:
+#      group-id: opfab-command
+
+schema:
+  registry:
+    url: http://localhost:8081
+
+opfab:
+  kafka:
+    topics:
+      topicname: opfab
 
 #here we put urls for all feign clients
 users:
@@ -12,5 +29,10 @@ users:
 externalRecipients-url: "{\
            processAction: \"http://localhost:8090/test\", \
            api_test_externalRecipient1: \"http://localhost:8090/test\", \
-           api_test_externalRecipient2: \"http://localhost:8090/test\" \
+           api_test_externalRecipient2: \"http://localhost:8090/test\", \
+           externalRecipient1: \"http://localhost:8090/test\", \
+           externalRecipient2: \"http://localhost:8090/test\" \
            }"
+
+# WARNING : If you set this parameter to false , all users have the rights to respond to all cards
+checkPerimeterForResponseCard: true

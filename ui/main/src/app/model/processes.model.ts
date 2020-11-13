@@ -8,7 +8,7 @@
  */
 
 
-import {Card, Detail} from '@ofModel/card.model';
+import {Card} from '@ofModel/card.model';
 import {I18n} from '@ofModel/i18n.model';
 import {Map as OfMap} from '@ofModel/map';
 
@@ -17,16 +17,11 @@ export class Process {
     constructor(
         readonly id: string,
         readonly version: string,
-        readonly name?: I18n | string,
-        readonly templates?: string[],
-        readonly csses?: string[],
+        readonly name?: string,
         readonly locales?: string[],
-        readonly menuLabel?: string,
-        readonly menuEntries?: MenuEntry[],
-        readonly states?: OfMap<State>
-    ) { if ( !(name instanceof I18n)) {
-            name = new I18n(name);
-    }
+        readonly states?: OfMap<State>,
+        readonly uiVisibility?: UiVisibility
+    ) { 
     }
 
     public extractState(card: Card): State {
@@ -38,26 +33,17 @@ export class Process {
     }
 }
 
-export const unfouundProcess: Process = new Process('', '', new I18n('process.not-found'),
-     [], [], [], '', [], null);
+export const unfouundProcess: Process = new Process('', '', 'process.not-found',
+     [], null, null);
 
-export class MenuEntry {
+
+export class UiVisibility {
+
     /* istanbul ignore next */
     constructor(
-        readonly id: string,
-        readonly label: string,
-        readonly url: string
+        readonly monitoring: boolean,
+        readonly logging: boolean
     ) {
-    }
-}
-
-export class Menu {
-    /* istanbul ignore next */
-    constructor(
-        readonly id: string,
-        readonly version: string,
-        readonly label: string,
-        readonly entries: MenuEntry[]) {
     }
 }
 
@@ -67,11 +53,23 @@ export class State {
         readonly details?: Detail[],
         readonly response?: Response,
         readonly acknowledgementAllowed?: boolean,
-        readonly name?: I18n,
-        readonly color?: string
+        readonly name?: string,
+        readonly color?: string,
+        readonly userCardTemplate?: string,
+        readonly secondsBeforeTimeSpanForReminder?: number
     ) {
     }
 }
+
+export class Detail {
+    /* istanbul ignore next */
+    constructor(
+        readonly title: I18n,
+        readonly templateName: string,
+        readonly styles: string[]) {
+    }
+}
+
 
 export class Response {
     /* istanbul ignore next */
@@ -79,7 +77,8 @@ export class Response {
         readonly lock?: boolean,
         readonly state?: string,
         readonly btnColor?: ResponseBtnColorEnum,
-        readonly btnText?: I18n
+        readonly btnText?: I18n,
+        readonly externalRecipients?: string[]
     ) {
     }
 }

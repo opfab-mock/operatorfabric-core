@@ -1,42 +1,16 @@
 {
   "id": "TEST",
   "version": "1",
-  "name": {
-    "key": "process.label"
+  "uiVisibility": {
+    "monitoring": true,
+    "logging": true,
+    "calendar": true
   },
+  "name": "process.label",
   "defaultLocale": "fr",
-  "templates": [
-    "security",
-    "unschedulledPeriodicOp",
-    "operation",
-    "template1",
-    "template2"
-  ],
-  "csses": [
-    "tabs",
-    "accordions",
-    "filter",
-    "operations",
-    "security"
-  ],
-  "menuLabel": "menu.label",
-  "menuEntries": [
-    {
-      "id": "uid test 0",
-      "url": "https://opfab.github.io/",
-      "label": "menu.first"
-    },
-    {
-      "id": "uid test 1",
-      "url": "https://www.la-rache.com",
-      "label": "menu.second"
-    }
-  ],
   "states": {
     "firstState": {
-      "name": {
-        "key": "process.label"
-      },
+      "name":  "state.label",
       "color": "blue",
       "details": [
         {
@@ -45,7 +19,8 @@
           },
           "templateName": "operation"
         }
-      ]
+      ],
+      "acknowledgementAllowed": false
     }
   }
 }

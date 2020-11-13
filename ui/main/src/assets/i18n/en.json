@@ -1,32 +1,37 @@
 {
   "menu": {
     "feed": "Card Feed",
+    "calendar": "Calendar",
     "archives": "Archives",
     "logging": "Logging",
+    "admin": "Administration",
     "monitoring": "Monitoring",
     "logout": "Logout",
     "settings": "Settings",
-    "about": "About"
+    "about": "About",
+    "usercard": "Card Creation"
   },
-  "timeline" : {
-    "businessPeriod": "Business period", 
-    "buttonTitle" : { 
+  "timeline": {
+    "businessPeriod": "Business period",
+    "buttonTitle": {
       "TR": "RT",
-      "J" : "D",
-      "7D":"7D",
-      "W" : "W",
-      "M" : "M",
-      "Y" : "Y"
+      "J": "D",
+      "7D": "7D",
+      "W": "W",
+      "M": "M",
+      "Y": "Y"
     }
   },
   "feed": {
     "filters": {
       "title": "Filters",
-      "time":{
-        "title":"Time",
+      "time": {
+        "titleIfFilterBasedOnPublishDate": "Receipt date",
+        "titleIfFilterBasedOnBusinessDate": "Business period",
         "start.label": "Start",
         "end.label": "End",
-        "active.label": "Active"
+        "active.label": "Active",
+        "lttd.label": "Finished"
       },
       "type": {
         "title": "Type",
@@ -58,22 +63,24 @@
     },
     "sort": {
       "severityPub": "Sorted by severity then publication",
-      "pub": "Sorted by publication"
+      "pub": "Sorted by publication",
+      "read": "Sorted by read",
+      "notsortedByRead": "Not sorted by read"
     }
   },
-  "login":{
+  "login": {
     "reset": "Reset",
     "login": "Login",
     "password": "Password",
-    "submit":{
-      "password":"Sign In",
+    "submit": {
+      "password": "Sign In",
       "code": "Sign in using {{name}}"
     },
-    "error":{
-      "authenticate":"Wrong login or password",
-      "code":"Wrong authentication code",
-      "unavailable":"Authentication service is currently unavailable",
-      "unexpected":"An unexpected error was detected during login: {{error}}",
+    "error": {
+      "authenticate": "Wrong login or password",
+      "code": "Wrong authentication code",
+      "unavailable": "Authentication service is currently unavailable",
+      "unexpected": "An unexpected error was detected during login: {{error}}",
       "disconnected": "You have been disconnected",
       "token": {
         "invalid": "Invalid token stored",
@@ -81,21 +88,16 @@
       }
     }
   },
-  "settings":{
-    "email": "Email address",
+  "settings": {
     "description": "Description",
     "locale": "Language",
     "timeZone": "Time zone",
-    "timeFormat": "Time format",
-    "dateFormat": "Date format",
-    "dateTimeFormat": "Date Time format",
     "defaultTags": "Default tags",
     "playSoundLabel": "Play sounds for cards with severity",
     "playSoundForAlarm": "Alarm",
     "playSoundForAction": "Action",
     "playSoundForCompliant": "Compliant",
-    "playSoundForInformation": "Information",
-    "invalidEmail": "Invalid email address"
+    "playSoundForInformation": "Information"
   },
   "archive": {
     "filters": {
@@ -112,22 +114,77 @@
     "noResult": "Your search did not match any results."
   },
   "logging": {
-    "filters": {"process": "Service"},
+    "filters": {
+      "process": "Process"
+    },
     "cardType": "Card Type",
     "timeOfAction": "Time of Action",
-    "processName": "Process Name",
+    "processName": "Title",
     "description": "Description",
     "sender": "Sender",
-    "noResult": "No result"
+    "noResult": "No result",
+    "ExportTOExcel": "Export to Excel"
   },
   "monitoring": {
-    "filters": {"process": "Process"}
+    "filters": {
+      "process": "Process"
+    },
+    "time": "Time",
+    "businessPeriod": "Business Period",
+    "title": "Title",
+    "summary": "Summary",
+    "trigger": "Trigger",
+    "status": "Status",
+    "seeDetails": "see details",
+    "ExportTOExcel": "Export to Excel"
   },
   "button": {
     "ok": "OK",
     "cancel": "Cancel",
-    "reset" : "Reset"
-
+    "reset": "Reset",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "userCard": {
+    "title": "Create a new card",
+    "editTitle" : "Edit a card",
+    "error": {
+      "noRecipientSelected": "You must at least choose one recipient",
+      "templateError": "Technical error : invalid template",
+      "impossibleToSendCard": "Impossible to send card for technical reasons"
+    },
+    "filters": {
+      "severity": "Severity",
+      "process": "Process",
+      "state": "State",
+      "startDate":  "Start Date",
+      "endDate":  "End Date",
+      "comment": "Comment",
+      "recipients": "Recipients"
+    },
+    "options": {
+      "severity": {
+        "ALARM": "Alarm",
+        "ACTION": "Action",
+        "COMPLIANT": "Compliant",
+        "INFORMATION": "Information"
+      }
+    },
+    "prepareCard": "Prepare Card before sending",
+    "confirmSending": "Send the following card?",
+    "accept": "Send",
+    "refuse": "Cancel",
+    "processInstanceId": "Id",
+    "state": "State",
+    "send-another-one": "Send another Card",
+    "cardSendWithNoError": "Card sent",
+    "deleteCard": {
+      "doYouReallyWant": "Do you really want to delete this card ?",
+      "cardDeletedWithNoError": "Card deleted",
+      "error": {
+        "impossibleToDeleteCard": "Impossible to delete card for technical reasons"
+      }
+    }
   },
   "response": {
     "btnTitle": "VALIDATE ANSWERS",
@@ -136,12 +193,82 @@
       "form": "The form is not correctly filled",
       "ack": "Unable to change acknowledgement of this card for an error of remote system"
     },
-    "submitSuccess": "Action succeeded"
+    "submitSuccess": "Action succeeded",
+    "answers": "Answers"
   },
   "cardAcknowledgment": {
     "button": {
       "ack": "Acknowledge and close",
       "unack": "Cancel acknowledgement"
+    }
+  },
+  "admin": {
+    "input": {
+      "group": {
+        "delete": "Do you really want to delete group",
+        "add": "Add new group"
+      },
+      "entity": {
+        "delete": "Do you really want to delete entity",
+        "add": "Add new entity"
+      },
+      "user": {
+        "login": "Login",
+        "lastname": "Last name",
+        "firstname": "First name",
+        "groups": "Groups",
+        "entities": "Entities",
+        "add": "Add new user",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save Changes",
+        "close": "Close",
+        "cancel": "cancel",
+        "confirm": "Please confirm..",
+        "user": "user",
+        "filter": "filter by ",
+        "filterAll": "filter all columns"
+      },
+      "delete": "Do you really want to delete user",
+      "login": {
+        "required": "Login is required.",
+        "minLength": "Login should be minimum 4 characters.",
+        "maxLength": "Login should be maximum 20 characters.",
+        "alreadyTaken": "Login is already taken."
+      },
+      "firstname": {
+        "required": "First name is required.",
+        "maxLength": "First name should be maximum 20 characters."
+      },
+      "lastname": {
+        "required": "Last name is required.",
+        "maxLength": "Last name should be maximum 20 characters."
+      },
+      "id": {
+        "required": "Id is required.",
+        "minLength": "Id should be minimum 2 characters.",
+        "maxLength": "Id should be maximum 20 characters.",
+        "alreadyTaken": "ID is already taken.",
+        "label":"Id"
+      },
+      "name": {
+        "required": "Name is required.",
+        "maxLength": "Name should be maximum 20 characters.",
+        "label":"Name"
+      },
+      "description": "Description",
+      "lines": "lines"
+    },
+    "tabs": {
+      "users": "Users management",
+      "groups": "Groups management",
+      "entities": "Entities management"
+    },
+    "pagination": {
+      "firstText": "Fisrt",
+      "lastText": "Last",
+      "nextText": "Next",
+      "prevText": "Previous"
     }
   }
 }

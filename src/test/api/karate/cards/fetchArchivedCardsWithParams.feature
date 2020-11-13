@@ -3,7 +3,7 @@ Feature: Archives
 
   Background:
 
-    * def signInAsTSO = call read('../common/getToken.feature') { username: 'tso1-operator'}
+    * def signInAsTSO = call read('../common/getToken.feature') { username: 'operator1'}
     * def authTokenAsTSO = signInAsTSO.authToken
 
   Scenario: Post 10 cards, fill the archive
@@ -16,10 +16,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card1",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -34,10 +31,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card2",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ACTION",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -52,10 +46,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card3",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "INFORMATION",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -70,10 +61,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card4",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -88,10 +76,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card5",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -106,10 +91,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card6",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -125,10 +107,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card7",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -143,10 +122,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card8",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -162,10 +138,7 @@ Feature: Archives
 	"processInstanceId" : "process2card9",
 	"endDate" : 1583733122000,
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -180,10 +153,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process2card10",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"startDate" : 1583333122000,
 	"endDate" : 1583733122000,
@@ -202,10 +172,7 @@ Feature: Archives
 	"process"  :"api_test",
 	"processInstanceId" : "process10",
 	"state": "messageState",
-	"recipient" : {
-				"type" : "GROUP",
-				"identity" : "TSO1"
-			},
+	"groupRecipients": ["Dispatcher"],
 	"severity" : "ALARM",
 	"summary" : {"key" : "defaultProcess.summary"},
 	"title" : {"key" : "defaultProcess.title"},

@@ -1,3 +1,7 @@
+repositories {
+    maven { url "https://packages.confluent.io/maven/" }
+}
+
 dependencies {
     swaggerCodegen generator.swagger, project(':tools:swagger-spring-generators')
     swaggerUI generator.swaggerUI
@@ -8,9 +12,14 @@ dependencies {
     compileOnly boot.annotationConfiguration
     annotationProcessor boot.annotationConfiguration
 
+    implementation 'org.springframework.kafka:spring-kafka'
+    implementation "io.confluent:kafka-schema-registry-client:${versions['kavro.schemaRegistryClient']}"
+    implementation "io.confluent:kafka-avro-serializer:${versions['kavro.avroSerializer']}"
+
     compile boot.starterWebflux
     compile project(':client:cards-client-data')
     compile project(':tools:spring:spring-mongo-utilities')
+    compile project(':tools:spring:aop-process')
     compile project(':tools:spring:spring-oauth2-utilities')
     testCompile testing.reactor
     testCompile project(':tools:spring:spring-test-utilities')

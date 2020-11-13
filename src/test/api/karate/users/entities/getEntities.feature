@@ -1,10 +1,10 @@
 Feature: Get Entities
 
   Background:
-   #Getting token for admin and tso1-operator user calling getToken.feature
+   #Getting token for admin and operator1 user calling getToken.feature
     * def signIn = call read('../../common/getToken.feature') { username: 'admin'}
     * def authToken = signIn.authToken
-    * def signInAsTSO = call read('../../common/getToken.feature') { username: 'tso1-operator'}
+    * def signInAsTSO = call read('../../common/getToken.feature') { username: 'operator1'}
     * def authTokenAsTSO = signInAsTSO.authToken
 
 
@@ -35,8 +35,8 @@ Feature: Get Entities
 
 
   Scenario: get entities with simple user
-    #   Using TSO user,  expected response 403
+    #   Using TSO user,  expected response 200
     Given url opfabUrl + 'users/entities'
     And header Authorization = 'Bearer ' + authTokenAsTSO
     When method get
-    Then status 403
+    Then status 200
