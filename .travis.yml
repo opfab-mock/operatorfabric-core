@@ -16,7 +16,7 @@ before_install:
   - export OF_VERSION=$(<VERSION)
   - export GRADLE_OPTS="-XX:MaxMetaspaceSize=512m -Xmx1024m"
   - ./CICD/travis/check_version.sh --branch $TRAVIS_BRANCH --version $OF_VERSION
-  - whereis java
+  - ls -hAlF /usr/bin/java
   - nvm install $NODE_VERSION
 install:
   # first install needs to remove ~/.sdkman (empty in our case because created by cache step) otherwise SdkMan is not installed
