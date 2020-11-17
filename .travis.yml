@@ -16,7 +16,7 @@ before_install:
   - export OF_VERSION=$(<VERSION)
   - export GRADLE_OPTS="-XX:MaxMetaspaceSize=512m -Xmx1024m"
   - ./CICD/travis/check_version.sh --branch $TRAVIS_BRANCH --version $OF_VERSION
-  - ls -hAlF /usr/bin/java
+  - ls -hAlF /usr/bin/java /etc/alternatives/java
   - nvm install $NODE_VERSION
 install:
   # first install needs to remove ~/.sdkman (empty in our case because created by cache step) otherwise SdkMan is not installed
@@ -74,6 +74,7 @@ jobs:
         # See https://github.com/SonarSource/SonarJS/issues/1928 and https://community.sonarsource.com/t/error-about-unsupported-ts-version-while-project-is-using-supported-version/15776
         - rm -r ui/main/node_modules/@compodoc/ngd-core
         - rm -r ui/main/node_modules/ts-simple-ast
+        - sdk u java 11.0.2-openjdk
         - sonar-scanner
         - docker-compose -f src/main/docker/test-environment/docker-compose.yml down
     - stage: doc
