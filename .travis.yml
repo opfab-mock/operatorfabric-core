@@ -16,8 +16,12 @@ before_install:
   - export OF_VERSION=$(<VERSION)
   - export GRADLE_OPTS="-XX:MaxMetaspaceSize=512m -Xmx1024m"
   - ./CICD/travis/check_version.sh --branch $TRAVIS_BRANCH --version $OF_VERSION
-  - ls -hAlF /usr/bin/java /etc/alternatives/java
   - nvm install $NODE_VERSION
+# test purpose
+  - echo JAVA_HOME = ${JAVA_HOME}
+  - echo PATH = ${PATH}
+  - echo "Content of JAVA_VERSION -> '$(<JAVA_VERSION)'"
+  - ls -hAlF /usr/bin/java /etc/alternatives/java
 install:
   # first install needs to remove ~/.sdkman (empty in our case because created by cache step) otherwise SdkMan is not installed
   # then install sdkman
@@ -36,7 +40,7 @@ install:
   # Should be synch with ${OF_HOME}/bin/load_environment_light.sh. It's the first part of the sdk reference without vendor name
   # for example the current configured in sdk has the following reference `8.0.272-zulu`
   # the value of the following variable is `8.0.272` and its vendor name part is `-zulu`
-  - CURRENT_JDK_VERSION="8.0.272"
+  - CURRENT_JDK_VERSION="$(<JAVA_VERSION)"
   # need to substitute last dot by an underscore. Example value for the following: "1.8.0_272"
   # for java version higher than 8 the prefix `1.` should be removed
   - FULL_JDK_VERSION="1.${CURRENT_JDK_VERSION%.*}${CURRENT_JDK_VERSION/*./_}"
@@ -54,6 +58,9 @@ install:
     sdk install java "${JDK_VERSION_4_SDKMAN}" ;
     fi ;
     fi
+# test purpose begin
+  - sdk list java 
+# test purpos end
   - sudo apt-get install realpath
   # displays versions of useful tools for visual checks
   - npm -version
