@@ -50,26 +50,17 @@ export class UiVisibility {
 export class State {
     /* istanbul ignore next */
     constructor(
-        readonly details?: Detail[],
+        readonly detailTitle?: I18n,
+        readonly templateName?: string,
+        readonly styles?: string[],
         readonly response?: Response,
         readonly acknowledgementAllowed?: boolean,
         readonly name?: string,
         readonly color?: string,
         readonly userCardTemplate?: string,
-        readonly secondsBeforeTimeSpanForReminder?: number
     ) {
     }
 }
-
-export class Detail {
-    /* istanbul ignore next */
-    constructor(
-        readonly title: I18n,
-        readonly templateName: string,
-        readonly styles: string[]) {
-    }
-}
-
 
 export class Response {
     /* istanbul ignore next */

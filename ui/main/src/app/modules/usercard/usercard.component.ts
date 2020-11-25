@@ -13,12 +13,12 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@ofStore/index';
 import { CardService } from '@ofServices/card.service';
 import { UserService } from '@ofServices/user.service';
-import { Card, CardData,fromCardToCardForPublishing} from '@ofModel/card.model';
+import { Card, CardData,fromCardToCardForPublishing, TimeSpan} from '@ofModel/card.model';
 import { I18n } from '@ofModel/i18n.model';
-import {  Subject } from 'rxjs';
+import {  Observable, Subject } from 'rxjs';
 import { Process } from '@ofModel/processes.model';
 import { TimeService } from '@ofServices/time.service';
-import { Severity, TimeSpan } from '@ofModel/light-card.model';
+import { Severity } from '@ofModel/light-card.model';
 import { Guid } from 'guid-typescript';
 import { NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import { NgbModalRef } from '@ng-bootstrap/ng-bootstrap/modal/modal-ref';
@@ -33,6 +33,8 @@ import * as moment from 'moment-timezone';
 import { HandlebarsService } from '../cards/services/handlebars.service';
 import { DetailContext } from '@ofModel/detail-context.model';
 import { map } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
+import { buildSettingsOrConfigSelector } from '@ofStore/selectors/settings.x.config.selectors';
 
 declare const templateGateway: any;
 
@@ -104,7 +106,8 @@ export class UserCardComponent implements OnDestroy, OnInit {
         private element: ElementRef,
         private processesService: ProcessesService,
         private route: ActivatedRoute,
-        private handlebars: HandlebarsService
+        private handlebars: HandlebarsService,
+        protected translate: TranslateService,
     ) {
     }
 
@@ -132,17 +135,30 @@ export class UserCardComponent implements OnDestroy, OnInit {
         this.changeStatesWhenSelectProcess();
         this.loadTemplateWhenStateChange();
 
-        this.dropdownSettings = {
-            text: 'Select a recipîent',
-            selectAllText: 'Select All',
-            unSelectAllText: 'UnSelect All',
-            enableSearchFilter: true,
-            classes: 'custom-class-example'
-        };
+        this.getLocale().subscribe(locale => {
+            this.translate.use(locale);
+            this.translate.get(['userCard.searchPlaceholderText', 'userCard.selectRecipientText', 'userCard.selectAllText', 'userCard.unSelectAllText', 'userCard.filterSelectAllText', 'userCard.filterUnSelectAllText'])
+              .subscribe(translations => {
+                this.dropdownSettings = {
+                    searchPlaceholderText: translations['userCard.searchPlaceholderText'],
+                    text: translations['userCard.selectRecipientText'],
+                    selectAllText: translations['userCard.selectAllText'],
+                    unSelectAllText: translations['userCard.unSelectAllText'],
+                    filterSelectAllText: translations['userCard.filterSelectAllText'],
+                    filterUnSelectAllText: translations['userCard.filterUnSelectAllText'],
+                    enableSearchFilter: true,
+                    classes: 'custom-class-example'
+                };
+              })
+            });
+
+        
         this.loadCardForEdition();
     }
 
-
+    protected getLocale(): Observable<string> {
+        return this.store.select(buildSettingsOrConfigSelector('locale'));
+      }
 
     loadCardForEdition() {
         this.route.paramMap.subscribe(
@@ -338,9 +354,14 @@ export class UserCardComponent implements OnDestroy, OnInit {
 
         const title = (!!specificInformation.card.title) ? specificInformation.card.title : 'UNDEFINED';
         const summary = (!!specificInformation.card.summary) ? specificInformation.card.summary : 'UNDEFINED';
+        const keepChildCards = (!!specificInformation.card.keepChildCards) ? specificInformation.card.keepChildCards : false;
+        const secondsBeforeTimeSpanForReminder = (!!specificInformation.card.secondsBeforeTimeSpanForReminder) ? specificInformation.card.secondsBeforeTimeSpanForReminder : null;
 
         let timeSpans = [];
-        if  (!!specificInformation.viewCardInAgenda) timeSpans = [new TimeSpan(startDate , endDate )];
+        if  (!!specificInformation.viewCardInAgenda) {
+            if (!!specificInformation.recurrence) timeSpans = [new TimeSpan(startDate , endDate , specificInformation.recurrence )];
+            else timeSpans = [new TimeSpan(startDate , endDate )];
+        }
 
 
         let processInstanceId ;
@@ -365,7 +386,9 @@ export class UserCardComponent implements OnDestroy, OnInit {
             externalRecipients: null,
             title: title,
             summary: summary,
+            secondsBeforeTimeSpanForReminder: secondsBeforeTimeSpanForReminder,
             timeSpans : timeSpans,
+            keepChildCards: keepChildCards,
             data: specificInformation.card.data,
         } as Card;
 

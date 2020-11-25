@@ -52,9 +52,11 @@ public class ArchivedCardPublicationData implements Card {
     private String state;
     private I18n title;
     private I18n summary;
+
     @CreatedDate
     private Instant publishDate;
     private Instant lttd;
+
     
     @Indexed
     private Instant startDate;
@@ -62,7 +64,6 @@ public class ArchivedCardPublicationData implements Card {
     private Instant endDate;
     private SeverityEnum severity;
     private List<String> tags;
-    private List<? extends Detail> details;
     private Recipient recipient;
     private Object data;
     @Indexed
@@ -86,6 +87,8 @@ public class ArchivedCardPublicationData implements Card {
 
     private PublisherTypeEnum publisherType;
 
+    private Integer  secondsBeforeTimeSpanForReminder;
+
     public ArchivedCardPublicationData(CardPublicationData card){
         this.id = card.getUid();
         this.parentCardId = card.getParentCardId();
@@ -103,7 +106,6 @@ public class ArchivedCardPublicationData implements Card {
         this.lttd = card.getLttd();
         this.title = card.getTitle();
         this.summary = card.getSummary();
-        this.details = card.getDetails() == null ? null : new ArrayList<>(card.getDetails());
         this.tags = card.getTags() == null ? null : new ArrayList<>(card.getTags());
         this.recipient = card.getRecipient();
         this.severity = card.getSeverity();
@@ -115,6 +117,7 @@ public class ArchivedCardPublicationData implements Card {
         this.entitiesAllowedToRespond = card.getEntitiesAllowedToRespond() == null ? null : new ArrayList<>(card.getEntitiesAllowedToRespond());
         this.processStateKey = process + "." + state;
         this.publisherType = card.getPublisherType();
+        this.secondsBeforeTimeSpanForReminder = card.getSecondsBeforeTimeSpanForReminder();
     }
 
 }

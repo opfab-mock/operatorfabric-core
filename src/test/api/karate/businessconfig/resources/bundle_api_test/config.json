@@ -8,13 +8,9 @@
 	},
 	"states":{
 		"messageState" : {
-			"secondsBeforeTimeSpanForReminder" : 500,
-			"details" : [{
-				"title" : { "key" : "detail.title"},
-				"templateName" : "template",
-				"styles" : [ "style" ]
-				
-			}]
+			"detailTitle" : { "key" : "detail.title"},
+			"templateName" : "template",
+			"styles" : [ "style" ]
 		}
 	}
 }

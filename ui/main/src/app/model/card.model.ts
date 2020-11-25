@@ -40,7 +40,9 @@ export class Card {
         readonly recipient?: Recipient,
         readonly parentCardId?: string,
         readonly initialParentCardUid?: string,
+        readonly keepChildCards?: boolean,
         readonly publisherType?: PublisherType | string,
+        public secondsBeforeTimeSpanForReminder?: number,
         public timeSpans?: TimeSpan[]
     ) {
     }
@@ -68,7 +70,9 @@ export class CardForPublishing {
         readonly recipient?: Recipient,
         readonly parentCardId?: string,
         readonly initialParentCardUid?: string,
+        readonly keepChildCards?: boolean,
         readonly publisherType?: PublisherType | string,
+        readonly secondsBeforeTimeSpanForReminder?: number,
         readonly timeSpans?: TimeSpan[]
     ) {
     }
@@ -102,9 +106,28 @@ export class CardData {
 export class TimeSpan {
     constructor(
         readonly start: number,
-        readonly end?: number
+        readonly end?: number,
+        readonly recurrence?: Recurrence
     ) { }
 }
+
+export class Recurrence {
+    constructor(
+        public hoursAndMinutes: HourAndMinutes,
+        public daysOfWeek?: number[],
+        public timeZone?: string
+    ) {}
+
+}
+
+export class HourAndMinutes {
+    constructor(
+        public hours: number,
+        public minutes: number
+    ) {}
+
+}
+
 
 export function fromCardToLightCard(card: Card): LightCard {
     return new LightCard(card.uid, card.id, card.publisher, card.processVersion, card.publishDate, card.startDate
@@ -134,7 +157,9 @@ export function fromCardToCardForPublishing(card: Card): CardForPublishing {
         card.recipient,
         card.parentCardId,
         card.initialParentCardUid,
+        card.keepChildCards,
         card.publisherType,
+        card.secondsBeforeTimeSpanForReminder,
         card.timeSpans
     );
 }

@@ -342,6 +342,12 @@ class CardProcessServiceShould {
         entityRecipients.add("Dispatcher");
         entityRecipients.add("Planner");
 
+        List<Integer> daysOfWeek = new ArrayList<>();
+        daysOfWeek.add(new Integer(2));
+        daysOfWeek.add(new Integer(3));
+        HoursAndMinutes hoursAndMinutes = new HoursAndMinutesPublicationData(2,10);
+        RecurrencePublicationData recurrence = new RecurrencePublicationData("timezone",daysOfWeek,hoursAndMinutes);
+
         CardPublicationData newCard = CardPublicationData.builder().publisher("PUBLISHER_1")
                 .processVersion("0.0.1").processInstanceId("PROCESS_1").severity(SeverityEnum.ALARM)
                 .startDate(start).title(I18nPublicationData.builder().key("title").build())
@@ -356,10 +362,11 @@ class CardProcessServiceShould {
                                 .identity("eric").build())
                         .build())
                 .entityRecipients(entityRecipients)
-                .timeSpan(TimeSpanPublicationData.builder().start(Instant.ofEpochMilli(123l)).build())
+                .timeSpan(TimeSpanPublicationData.builder().start(Instant.ofEpochMilli(123l)).recurrence(recurrence).build())
                 .process("process1")
                 .state("state1")
                 .publisherType(PublisherTypeEnum.EXTERNAL)
+                .secondsBeforeTimeSpanForReminder(new Integer(1000))
                 .build();
         cardProcessingService.processCards(Flux.just(newCard)).subscribe();
         CardPublicationData persistedCard = cardRepository.findById(newCard.getId()).block();

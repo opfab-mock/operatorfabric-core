@@ -54,6 +54,7 @@ public class ArchivedCardConsultationData implements Card {
     private String state;
     private I18n title;
     private I18n summary;
+
     @CreatedDate
     private Instant publishDate;
     private Instant lttd;
@@ -69,8 +70,6 @@ public class ArchivedCardConsultationData implements Card {
     @Singular
     private List<String> tags;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    @Singular
-    private List<? extends Detail> details;
     @JsonIgnore
     private Recipient recipient;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -101,4 +100,5 @@ public class ArchivedCardConsultationData implements Card {
     @Transient
     private Boolean hasBeenRead;
     private PublisherTypeEnum publisherType;
+    private Integer  secondsBeforeTimeSpanForReminder;
 }

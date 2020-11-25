@@ -73,6 +73,7 @@ public class CardPublicationData implements Card {
     private I18n title;
     
     private I18n summary;
+
     @CreatedDate
     private Instant publishDate;
     private Instant lttd;
@@ -90,9 +91,6 @@ public class CardPublicationData implements Card {
     @Singular
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<? extends TimeSpan> timeSpans;
-    @Singular
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<? extends Detail> details;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Recipient recipient;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -128,16 +126,14 @@ public class CardPublicationData implements Card {
     @Builder.Default
     private PublisherTypeEnum publisherType = PublisherTypeEnum.EXTERNAL;
 
+    private Integer  secondsBeforeTimeSpanForReminder;
+
     public void prepare(Instant publishDate) {
         this.publishDate = publishDate;
         this.id = process + "." + processInstanceId;
         if (null == this.uid)
         	this.uid = UUID.randomUUID().toString();
         this.setShardKey(Math.toIntExact(this.getStartDate().toEpochMilli() % 24 * 1000));
-        if (this.getTimeSpans() != null) {
-            for (TimeSpan ts : this.getTimeSpans())
-                ((TimeSpanPublicationData) ts).init();
-        }
         this.processStateKey = process + "." + state;
     }
 
@@ -163,6 +159,7 @@ public class CardPublicationData implements Card {
                 .title(((I18nPublicationData) this.getTitle()).copy())
                 .summary(((I18nPublicationData) this.getSummary()).copy())
                 .publisherType(this.getPublisherType())
+                .secondsBeforeTimeSpanForReminder(this.secondsBeforeTimeSpanForReminder);
                 ;
         if(this.getTimeSpans()!=null)
             result.timeSpansSet(new HashSet<>(this.getTimeSpans()));

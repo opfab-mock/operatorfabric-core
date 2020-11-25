@@ -8,6 +8,7 @@
  */
 
 import {I18n} from '@ofModel/i18n.model';
+import { TimeSpan } from './card.model';
 
 export class LightCard {
     /* istanbul ignore next */
@@ -33,7 +34,8 @@ export class LightCard {
         readonly parentCardId?: string,
         readonly initialParentCardUid?: string,
         readonly entitiesAllowedToRespond?: string[],
-        readonly publisherType?: PublisherType | string
+        readonly publisherType?: PublisherType | string,
+        readonly secondsBeforeTimeSpanForReminder?: number
     ) {
     }
 }
@@ -69,17 +71,6 @@ export enum Sound {
     INFORMATION, COMPLIANT
 }
 
-export enum Display {
-    BUBBLE, LINE
-}
-
-export class TimeSpan {
-    constructor(
-        readonly start: number,
-        readonly end?: number,
-        readonly display = Display.BUBBLE) {
-    }
-}
 
 export enum PublisherType {
     EXTERNAL,
