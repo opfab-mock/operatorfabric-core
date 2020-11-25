@@ -1,5 +1,5 @@
 os: linux
-dist: xenial
+dist: trusty
 addons:
     sonarcloud:
         organization: "opfab-mock"
@@ -17,11 +17,6 @@ before_install:
   - export GRADLE_OPTS="-XX:MaxMetaspaceSize=512m -Xmx1024m"
   - ./CICD/travis/check_version.sh --branch $TRAVIS_BRANCH --version $OF_VERSION
   - nvm install $NODE_VERSION
-# test purpose
-  - echo JAVA_HOME = ${JAVA_HOME}
-  - echo PATH = ${PATH}
-  - echo "Content of JAVA_VERSION -> '$(<JAVA_VERSION)'"
-  - ls -hAlF /usr/bin/java /etc/alternatives/java
 install:
   # first install needs to remove ~/.sdkman (empty in our case because created by cache step) otherwise SdkMan is not installed
   # then install sdkman
@@ -38,16 +33,16 @@ install:
   - CurrentNpmVersion="$(npm -version)"
   - if [ "${CurrentNpmVersion}" != "${EXPECTED_NPM_VERSION}" ] ; then npm i -g npm@${EXPECTED_NPM_VERSION} ; fi
   # Should be synch with ${OF_HOME}/bin/load_environment_light.sh. It's the first part of the sdk reference without vendor name
-  # for example the current configured in sdk has the following reference `8.0.272-zulu`
-  # the value of the following variable is `8.0.272` and its vendor name part is `-zulu`
+  # for example the current configured in sdk has the following reference `8.0.265-zulu`
+  # the value of the following variable is `8.0.265` and its vendor name part is `-zulu`
   - CURRENT_JDK_VERSION="$(<JAVA_VERSION)"
-  # need to substitute last dot by an underscore. Example value for the following: "1.8.0_272"
+  # need to substitute last dot by an underscore. Example value for the following: "1.8.0_265"
   # for java version higher than 8 the prefix `1.` should be removed
   - FULL_JDK_VERSION="1.${CURRENT_JDK_VERSION%.*}${CURRENT_JDK_VERSION/*./_}"
-  # example value for the following: "8.0.272-zulu"
+  # example value for the following: "8.0.265-zulu"
   - JDK_VERSION_4_SDKMAN="${CURRENT_JDK_VERSION}-zulu"
   # Use javac because the prompt is simpler than the java one
-  # skips the beginning should return 1.8.0_272. Here redirection '2>&1' needed to load prompt value otherwise variable is empty
+  # skips the beginning should return 1.8.0_265. Here redirection '2>&1' needed to load prompt value otherwise variable is empty
   - CurrentJavacVersionNumber="$(javac -version 2>&1 | cut -d ' ' -f 2)"
   # if javac version is different than expected then asks sdkman to use expected java version or install it if necessary
   # if sdkman can't use the expected java version then asks sdkman to install it. Sdkman is configured to use it as default (line 26)
@@ -58,9 +53,6 @@ install:
     sdk install java "${JDK_VERSION_4_SDKMAN}" ;
     fi ;
     fi
-# test purpose begin
-  - sdk list java
-# test purpose end
   - sudo apt-get install realpath
   # displays versions of useful tools for visual checks
   - npm -version
@@ -81,11 +73,6 @@ jobs:
         # See https://github.com/SonarSource/SonarJS/issues/1928 and https://community.sonarsource.com/t/error-about-unsupported-ts-version-while-project-is-using-supported-version/15776
         - rm -r ui/main/node_modules/@compodoc/ngd-core
         - rm -r ui/main/node_modules/ts-simple-ast
-        - JDK_VERSION_4_SONAR="11.0.9-zulu"
-        - if ! sdk use java "${JDK_VERSION_4_SONAR}" ;
-          then
-          sdk install java "${JDK_VERSION_4_SONAR}" ;
-          fi ;
         - sonar-scanner
         - docker-compose -f src/main/docker/test-environment/docker-compose.yml down
     - stage: doc
