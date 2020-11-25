@@ -36,7 +36,7 @@ jar {
 	}
 
 docker {
-	name "lfeoperatorfabric/of-external-app"
+	name "lfeoperatorfabricmock/of-external-app"
 	tags "latest", "${project.version}"
     labels (['project':"${project.group}"])
 	dockerfile file('src/main/docker/Dockerfile')
